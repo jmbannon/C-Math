@@ -13,9 +13,8 @@
 #include "Parse.h"
 
 int main(void) {
-    char* test = "123banana";
+    char* test = "123sin()banana";
 
-    printf("Equation Parser!");
     parseFunction(test);
     return 0;
 }
