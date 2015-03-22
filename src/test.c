@@ -13,7 +13,7 @@
 #include "Parse.h"
 
 int main(void) {
-    char* test = "123sin()banana";
+    char* test = ".354";
 
     parseFunction(test);
     return 0;

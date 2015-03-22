@@ -70,6 +70,19 @@ trigType isTrigFunction(const char* firstLetter) {
         return NOTRIG;
 }
 
+functionPart* addToFunctionList(functionPart* head, char* functionBuilder, const opType operation) {
+    functionPart* thePart = malloc(sizeof(functionPart));
+    thePart->str = malloc(sizeof(functionBuilder));
+    strcpy(thePart->str, functionBuilder);            
+    freeString(functionBuilder);
+
+    thePart->next = head;
+    head = thePart;
+    head->operation = operation;
+
+    return head;
+}
+
 function* parseFunction(const char* theFunction) {
     int i; /* iterator */
 
@@ -87,18 +100,17 @@ function* parseFunction(const char* theFunction) {
     int isFunction = 0;
     
     function* func = malloc(sizeof(function));
-    function* head = func;
-
+    func->head = NULL;
     functionPart* part = func->head;
 
     char* functionBuilder = malloc(0);
-    char c;
+    char c, tempChar;
 
     for (i = 0; i < strlen(theFunction); i++) {
         c = theFunction[i];
 	printf("%c\n", c);
 
-        /* Always appends numbers */
+        /* NUMBERS */
         if (isdigit(c)) {
 
             if (i == 0)
@@ -118,42 +130,88 @@ function* parseFunction(const char* theFunction) {
                 hasOperation = 0;
         }
 
-        /* Always appends letters */
+        /* LETTERS */
         else if (isalpha(c)) {
 
             if (index == 0)
                 append(functionBuilder, c);
 
-            /* If letters proceed make up existing function, add preceding
+            /* If letters proceed are a trig function, add preceding
                function to equationList and create new function */
             else if (isTrigFunction(&theFunction[i])) {
                 isFunction = 1;
                 ++parenthesisBalance;
                 functionParenthesisBalance = parenthesisBalance;
-                part = malloc(sizeof(functionPart));
-                part->str = malloc(sizeof(functionBuilder));
-                strcpy(part->str, functionBuilder);
-                
-                freeString(functionBuilder);
+
+                part = addToFunctionList(part, functionBuilder, MUL);
                 appendStr(functionBuilder, &theFunction[i], 4);
 
                 i += 3;
                 parenthesisOpenIndex = i;
-          
-                printf("recognizes sin(\n");
-                printf("%s\n", part->str);
 
             }
-        
+
+            /* If char follows another char and is not a function,
+               add previous function to function list and create a
+               new function. For example: xy = x*y */
+            else if (isalpha(theFunction[i-1]) && !isFunction && !isParenthesis) {
+                part = addToFunctionList(part, functionBuilder, MUL);
+                appendStr(functionBuilder, &c, 1);
+            }
+
+            else if (theFunction[i-1] == '.' || theFunction[i-1] == ')') {
+                printf("* ERROR [parseFunction]:\n"
+                       "* Invalid variable. Cannot proceed non-numeric symbols.\n"
+                       "* Fix later for variable multiplication\n");
+                printf("*   Function: %s\n*   Index: %d\n", theFunction, i);
+                return NULL;
+            }
+
+            else
+                appendStr(functionBuilder, &c, 1);
+
+            if (hasOperation)
+                hasOperation = 0;
+
+        }
+
+        else if (c == '.') {
+            if (!hasDecimal) {
+                 tempChar = '0';
+
+                 /* If no numbers precede, add 0 first. */
+                 if (index == 0)                    
+                     appendStr(functionBuilder, &tempChar, 1);
+                 
+
+                 /* If letter precedes decimal, throw error. */
+                 else if (isalpha(theFunction[i-1])) {
+                     printf("* ERROR [parseFunction]:\n"
+                            "* A decimal point cannot proceed a variable.\n");
+                     printf("*   Function: %s\n*   Index: %d\n", theFunction, i);
+                     return NULL;
+                 }
+
+                 /* If a number does not precede decimal, add 0 first. */
+                 else if (!isdigit(theFunction[i-1]))
+                     appendStr(functionBuilder, &tempChar, 1);
+
+                 /* Append and set hasDecimal to true. */
+                 appendStr(functionBuilder, &c, 1);
+                 hasDecimal = 1;
+            }
+
+            else {
+                printf("* ERROR [parseFunction]:\n"
+                       "* Numeric already contains a decimal.\n");
+                printf("*   Function: %s\n*   Index: %d\n", theFunction, i);
+                return NULL;
+            }
         }
 
         
     }
-    printf("before %s\n", functionBuilder);
-    printf("%d\n", strlen(functionBuilder));
-    removeChar(functionBuilder, 2);
-    printf("after %s\n", functionBuilder);
 
-    
+    printf("%s\n", functionBuilder);
 }
 
