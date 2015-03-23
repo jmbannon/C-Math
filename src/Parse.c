@@ -49,8 +49,19 @@ struct function_part {
         trig trig;
     } part;
     opType operation;
+    functionPart* prev;
     functionPart* next;
 };
+
+void printInfo(function* theFunction) {
+    printf("Full function: %s\n", theFunction->str);
+    functionPart* curr = theFunction->head;
+
+    while (curr != NULL) {
+        printf("Part: %s Op: %d\n", curr->str, curr->operation);
+        curr = curr->next;
+    }
+}
 
 trigType isTrigFunction(const char* firstLetter) {
     if (strncmp(firstLetter, "sin(", 4) == 0)
@@ -70,17 +81,28 @@ trigType isTrigFunction(const char* firstLetter) {
         return NOTRIG;
 }
 
-functionPart* addToFunctionList(functionPart* head, char* functionBuilder, const opType operation) {
+void addToFunctionList(functionPart** head, char* functionBuilder, const opType operation) {
     functionPart* thePart = malloc(sizeof(functionPart));
-    thePart->str = malloc(sizeof(functionBuilder));
+    functionPart* currTemp = *head;
+
+    thePart->str = malloc(strlen(functionBuilder) + 1);
     strcpy(thePart->str, functionBuilder);            
     freeString(functionBuilder);
 
-    thePart->next = head;
-    head = thePart;
-    head->operation = operation;
+    
 
-    return head;
+    if (currTemp == NULL) {
+        thePart->next = currTemp;
+        *head = thePart;
+        return;
+    }
+
+    while (currTemp->prev != NULL) {
+        currTemp = currTemp->prev;
+    }
+
+    currTemp->prev = thePart;
+    thePart->next = currTemp;
 }
 
 function* parseFunction(const char* theFunction) {
@@ -100,6 +122,10 @@ function* parseFunction(const char* theFunction) {
     int isFunction = 0;
     
     function* func = malloc(sizeof(function));
+
+    func->str = malloc(strlen(theFunction)+1);
+    strcpy(func->str, theFunction);
+
     func->head = NULL;
     functionPart* part = func->head;
 
@@ -143,7 +169,7 @@ function* parseFunction(const char* theFunction) {
                 ++parenthesisBalance;
                 functionParenthesisBalance = parenthesisBalance;
 
-                part = addToFunctionList(part, functionBuilder, MUL);
+                addToFunctionList(&part, functionBuilder, MUL);
                 appendStr(functionBuilder, &theFunction[i], 4);
 
                 i += 3;
@@ -155,7 +181,8 @@ function* parseFunction(const char* theFunction) {
                add previous function to function list and create a
                new function. For example: xy = x*y */
             else if (isalpha(theFunction[i-1]) && !isFunction && !isParenthesis) {
-                part = addToFunctionList(part, functionBuilder, MUL);
+                addToFunctionList(&part, functionBuilder, MUL);
+                printf("new part!\n");
                 appendStr(functionBuilder, &c, 1);
             }
 
@@ -175,6 +202,7 @@ function* parseFunction(const char* theFunction) {
 
         }
 
+        /* DECIMAL POINT */
         else if (c == '.') {
             if (!hasDecimal) {
                  tempChar = '0';
@@ -209,12 +237,14 @@ function* parseFunction(const char* theFunction) {
             }
         }
 
+        /* NEGATIVE/SUBTRACTION */
         else if (c == '-') {
             if (!hasNegative) {
  
                 /* If the function has numbers/variables and is not in parenthesis, act as operator. */            
                 if (strlen(functionBuilder) != 0 && !isParenthesis && !isFunction && !hasOperation) {
-                    part = addToFunctionList(part, functionBuilder, SUB);
+                    addToFunctionList(&part, functionBuilder, SUB);
+                    printf("new part!\n");
                     hasOperation = 1;
 
                 /* Otherwise append to function. */
@@ -241,6 +271,8 @@ function* parseFunction(const char* theFunction) {
 
             /* If negative sign is present. */
             else {
+
+                /* If function already contains a negative and not in parenthesis string, throw exception */
                 if (strcmp(functionBuilder, "-") == 0 && !isParenthesis && !isFunction) {
                     printf("* ERROR [parseFunction]:\n"
                            "* A subtraction operation already exists.\n");
@@ -248,6 +280,7 @@ function* parseFunction(const char* theFunction) {
                     return NULL;
                 }
 
+                /* If no parenthesis, act as subtraction operation: add function to list. */
                 if (!isParenthesis && !isFunction) {
                     if (hasOperation) {
                         printf("* ERROR [parseFunction]:\n"
@@ -256,10 +289,12 @@ function* parseFunction(const char* theFunction) {
                         return NULL;
                     }
 
-                    part = addToFunctionList(part, functionBuilder, SUB);
+                    addToFunctionList(&part, functionBuilder, SUB);
+                    printf("new part!\n");
                     hasOperation = 1;
                 }
 
+                /* If within parenthesis, append to function to deal with in recursion */
                 else
                     appendStr(functionBuilder, &c, 1);
 
@@ -269,9 +304,73 @@ function* parseFunction(const char* theFunction) {
             }
         }
 
-        
-    }
+        /* EXPONENT */
+        else if (c == '^') {
+            if (!hasExponent) {
+            
+                /* If exponent does not proceed number or variable, throw exception. */
+                if (i == 0 || (!isdigit(theFunction[i-1]) && !isalpha(theFunction[i-1]) && theFunction[i-1] != ')')) {
+                    printf("* ERROR [parseFunction]:\n"
+                           "* Must proceed a number, variable, or parenthesis.\n");
+                    printf("*   Function: %s\n*   Index: %d\n", theFunction, i);
+                    return NULL;
+                }
+
+                /* Append to function and set exponent to true, negative and decimal to false for exponent number */
+                else {
+                    appendStr(functionBuilder, &c, 1);
+                    hasOperation = 1;
+                    hasExponent = 1;
+                    hasNegative = 0;
+                    hasDecimal = 0;
+                }
+
+                /* If exponent sign already exists, throw exception */
+            } else {
+                printf("* ERROR [parseFunction]:\n"
+                       "* Function already contains an exponent.\n");
+                printf("*   Function: %s\n*   Index: %d\n", theFunction, i);
+                return NULL;
+            }
+        }
+
+        else if (c == '+' || c == '*' || c == '/') {
+            
+            if (i == 0 || hasOperation) {
+                printf("* ERROR [parseFunction]:\n"
+                       "* Must proceed a number, variable, or parenthesis.\n");
+                printf("*   Function: %s\n*   Index: %d\n", theFunction, i);
+                return NULL;
+            }
+
+            /* If it is not in parenthesis or function, add function and operator to list */
+            else if (!isParenthesis && !isFunction) {
+                opType tempOp;
+                switch(c) {
+                case '+': tempOp = ADD;
+                case '*': tempOp = MUL;
+                case '/': tempOp = DIV;
+                default: tempOp = NOOP;
+                }
+
+                addToFunctionList(&part, functionBuilder, tempOp);
+                printf("new part!\n");
+            }
+
+            /* Otherwise append to function to deal with in recursion*/
+            else
+                appendStr(functionBuilder, &c, 1);
+
+            /* Clears negative, decimal, and exponent for next value after operation */
+            hasOperation = 1;
+            hasNegative = 0;
+            hasDecimal = 0;
+            hasExponent = 0;
+        }
+
+    } //end of forloop
 
     printf("%s\n", functionBuilder);
+    return func;
 }
 

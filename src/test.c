@@ -13,8 +13,8 @@
 #include "Parse.h"
 
 int main(void) {
-    char* test = ".354";
-
-    parseFunction(test);
+    char* test = ".354^-5+74x-56y";
+    function* theFunc = parseFunction(test);
+    printInfo(theFunc);
     return 0;
 }

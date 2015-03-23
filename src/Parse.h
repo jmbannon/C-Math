@@ -14,6 +14,6 @@ typedef struct polynomial poly;
 typedef struct trigonometry trig;
 
 function* parseFunction(const char* theFunction);
-
+void printInfo(function* theFunction);
 
 #endif
