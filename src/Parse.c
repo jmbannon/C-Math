@@ -180,7 +180,7 @@ function* parseFunction(const char* theFunction) {
                  tempChar = '0';
 
                  /* If no numbers precede, add 0 first. */
-                 if (index == 0)                    
+                 if (i == 0)                    
                      appendStr(functionBuilder, &tempChar, 1);
                  
 
@@ -206,6 +206,66 @@ function* parseFunction(const char* theFunction) {
                        "* Numeric already contains a decimal.\n");
                 printf("*   Function: %s\n*   Index: %d\n", theFunction, i);
                 return NULL;
+            }
+        }
+
+        else if (c == '-') {
+            if (!hasNegative) {
+ 
+                /* If the function has numbers/variables and is not in parenthesis, act as operator. */            
+                if (strlen(functionBuilder) != 0 && !isParenthesis && !isFunction && !hasOperation) {
+                    part = addToFunctionList(part, functionBuilder, SUB);
+                    hasOperation = 1;
+
+                /* Otherwise append to function. */
+                } else {
+                    if (i == 0) {
+                        appendStr(functionBuilder, &c, 1);
+                        hasNegative = 1;
+                    }
+
+                    else if (theFunction[i-1] == '.') {
+                        printf("* ERROR [parseFunction]:\n"
+                               "* Cannot subtract a decimal.\n");
+                        printf("*   Function: %s\n*   Index: %d\n", theFunction, i);
+                        return NULL;
+                    }
+
+                    else {
+                        appendStr(functionBuilder, &c, 1);
+                        hasNegative = 1;
+                    }
+                }                
+ 
+            }
+
+            /* If negative sign is present. */
+            else {
+                if (strcmp(functionBuilder, "-") == 0 && !isParenthesis && !isFunction) {
+                    printf("* ERROR [parseFunction]:\n"
+                           "* A subtraction operation already exists.\n");
+                    printf("*   Function: %s\n*   Index: %d\n", theFunction, i);
+                    return NULL;
+                }
+
+                if (!isParenthesis && !isFunction) {
+                    if (hasOperation) {
+                        printf("* ERROR [parseFunction]:\n"
+                               "* A subtraction operator already exists.\n");
+                        printf("*   Function: %s\n*   Index: %d\n", theFunction, i);
+                        return NULL;
+                    }
+
+                    part = addToFunctionList(part, functionBuilder, SUB);
+                    hasOperation = 1;
+                }
+
+                else
+                    appendStr(functionBuilder, &c, 1);
+
+                hasNegative = 0;
+                hasDecimal = 0;
+                hasExponent = 0;
             }
         }
 
