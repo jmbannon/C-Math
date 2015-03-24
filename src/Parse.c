@@ -57,6 +57,8 @@ void printInfo(function* theFunction) {
     printf("Full function: %s\n", theFunction->str);
     functionPart* curr = theFunction->head;
 
+    printf("%x\n", theFunction->head);
+
     while (curr != NULL) {
         printf("Part: %s Op: %d\n", curr->str, curr->operation);
         curr = curr->next;
@@ -89,20 +91,23 @@ void addToFunctionList(functionPart** head, char* functionBuilder, const opType 
     strcpy(thePart->str, functionBuilder);            
     freeString(functionBuilder);
 
+    thePart->operation = operation;
     
 
     if (currTemp == NULL) {
         thePart->next = currTemp;
+        thePart->prev = NULL;
         *head = thePart;
         return;
     }
 
-    while (currTemp->prev != NULL) {
-        currTemp = currTemp->prev;
+    while (currTemp->next != NULL) {
+        currTemp = currTemp->next;
     }
 
-    currTemp->prev = thePart;
-    thePart->next = currTemp;
+    currTemp->next = thePart;
+    thePart->prev = currTemp;
+    thePart->next = NULL;
 }
 
 function* parseFunction(const char* theFunction) {
@@ -125,9 +130,7 @@ function* parseFunction(const char* theFunction) {
 
     func->str = malloc(strlen(theFunction)+1);
     strcpy(func->str, theFunction);
-
     func->head = NULL;
-    functionPart* part = func->head;
 
     char* functionBuilder = malloc(0);
     char c, tempChar;
@@ -169,7 +172,8 @@ function* parseFunction(const char* theFunction) {
                 ++parenthesisBalance;
                 functionParenthesisBalance = parenthesisBalance;
 
-                addToFunctionList(&part, functionBuilder, MUL);
+                addToFunctionList(&func->head, functionBuilder, MUL);
+                printf("New part!\n");
                 appendStr(functionBuilder, &theFunction[i], 4);
 
                 i += 3;
@@ -181,7 +185,7 @@ function* parseFunction(const char* theFunction) {
                add previous function to function list and create a
                new function. For example: xy = x*y */
             else if (isalpha(theFunction[i-1]) && !isFunction && !isParenthesis) {
-                addToFunctionList(&part, functionBuilder, MUL);
+                addToFunctionList(&func->head, functionBuilder, MUL);
                 printf("new part!\n");
                 appendStr(functionBuilder, &c, 1);
             }
@@ -243,7 +247,7 @@ function* parseFunction(const char* theFunction) {
  
                 /* If the function has numbers/variables and is not in parenthesis, act as operator. */            
                 if (strlen(functionBuilder) != 0 && !isParenthesis && !isFunction && !hasOperation) {
-                    addToFunctionList(&part, functionBuilder, SUB);
+                    addToFunctionList(&func->head, functionBuilder, SUB);
                     printf("new part!\n");
                     hasOperation = 1;
 
@@ -289,7 +293,7 @@ function* parseFunction(const char* theFunction) {
                         return NULL;
                     }
 
-                    addToFunctionList(&part, functionBuilder, SUB);
+                    addToFunctionList(&func->head, functionBuilder, SUB);
                     printf("new part!\n");
                     hasOperation = 1;
                 }
@@ -334,6 +338,7 @@ function* parseFunction(const char* theFunction) {
             }
         }
 
+        /* OPERATORS (BESIDES SUBTRACTION) */
         else if (c == '+' || c == '*' || c == '/') {
             
             if (i == 0 || hasOperation) {
@@ -347,13 +352,13 @@ function* parseFunction(const char* theFunction) {
             else if (!isParenthesis && !isFunction) {
                 opType tempOp;
                 switch(c) {
-                case '+': tempOp = ADD;
-                case '*': tempOp = MUL;
-                case '/': tempOp = DIV;
-                default: tempOp = NOOP;
+                case '+': tempOp = ADD; break;
+                case '*': tempOp = MUL; break;
+                case '/': tempOp = DIV; break;
+                default: tempOp = NOOP; break;
                 }
 
-                addToFunctionList(&part, functionBuilder, tempOp);
+                addToFunctionList(&func->head, functionBuilder, tempOp);
                 printf("new part!\n");
             }
 
