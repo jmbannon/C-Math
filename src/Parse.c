@@ -249,8 +249,7 @@ function* parseFunction(const char* theFunction)
                      "*   Function: %s\n*   Index: %d\n", theFunction, i);
                      
                      return NULL;
-                 }
-
+                 
                  /* If a number does not precede decimal, add 0 first. */
                  else if (!isdigit(theFunction[i-1]))
                      appendStr(functionBuilder, &tempChar, 1);
