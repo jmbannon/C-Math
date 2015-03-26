@@ -10,8 +10,9 @@ typedef struct function_part_base base;
 typedef struct variable var;
 typedef struct variableList varList;
 
-typedef struct polynomial poly;
+typedef struct numeric num;
 typedef struct trigonometry trig;
+typedef struct logarithm log;
 
 function* parseFunction(const char* theFunction);
 void printInfo(function* theFunction);
