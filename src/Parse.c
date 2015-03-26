@@ -3,131 +3,8 @@
 #include <string.h>
 #include <ctype.h>
 #include "Parse.h"
+#include "Function.h"
 #include "StringExtensions.h"
-
-enum operations {NOOP, ADD, SUB, MUL, DIV, EXP};
-enum trigFunctions {NOTRIG, SIN, COS, TAN, SEC, CSC, COT};
-
-struct variable {
-    char variable;
-};
-
-struct variableList {
-    var var;
-    var* next;
-};
-
-struct function {
-    char* str;
-    functionPart* head;
-    varList variables;
-};
-
-struct numeric {
-    double constant;
-};
-
-struct trigonometry {
-    trigType trigType;
-    functionPart* contents;
-};
-
-struct logarithm {
-    double base;
-    functionPart* contents;
-};
-
-struct function_part {
-    char* str;
-    union part_union 
-    {
-        functionPart* parenthesis;
-        num* num;
-        trig* trig;
-        log* log;
-    } part;
-    
-    union part_exponent 
-    {
-        num* num;
-        functionPart* parenthesis;
-    } exponent;
-
-    opType operation;
-    functionPart* prev;
-    functionPart* next;
-};
-
-void printInfo(function* theFunction) {
-    if (!theFunction)
-        return;
-
-    printf("Full function: %s\n", theFunction->str);
-    functionPart* curr = theFunction->head;
-
-    printf("%x\n", theFunction->head);
-
-    while (curr != NULL) {
-        printf("Part: %s Op: %d\n", curr->str, curr->operation);
-        curr = curr->next;
-    }
-}
-
-trigType isTrigFunction(const char* firstLetter) 
-{
-    if (strncmp(firstLetter, "sin(", 4) == 0)
-        return SIN;
-
-    else if (strncmp(firstLetter, "cos(", 4) == 0)
-        return COS;
-
-    else if (strncmp(firstLetter, "tan(", 4) == 0)
-        return TAN;
-
-    else if (strncmp(firstLetter, "sec(", 4) == 0)
-        return SEC;
-
-    else if (strncmp(firstLetter, "csc(", 4) == 0)
-        return CSC;
-
-    else if (strncmp(firstLetter, "cot(", 4) == 0)
-        return COT;
-         
-    else
-        return NOTRIG;
-}
-
-void addToFunctionList(functionPart** head, char* functionBuilder, 
-                       const opType operation) 
-{
-    functionPart* thePart = malloc(sizeof(functionPart));
-    functionPart* currTemp = *head;
-
-    thePart->str = malloc(strlen(functionBuilder) + 1);
-    strcpy(thePart->str, functionBuilder);            
-    freeString(functionBuilder);
-
-    thePart->operation = operation;
-    
-    if (currTemp == NULL) 
-    {
-        thePart->next = currTemp;
-        thePart->prev = NULL;
-        *head = thePart;
-        return;
-    }
-
-    while (currTemp->next != NULL) 
-    {
-        currTemp = currTemp->next;
-    }
-
-    currTemp->next = thePart;
-    thePart->prev = currTemp;
-    thePart->next = NULL;
-}
-
-
 
 function* parseFunction(const char* theFunction) 
 {
@@ -140,6 +17,8 @@ function* parseFunction(const char* theFunction)
 
     int hasOperation = 0;
     int hasNegative = 0;
+    int hasNumber = 0;
+    int hasPrime = 0;
     int hasDecimal = 0;
     int hasExponent = 0;
     int hasVariable = 0;
@@ -455,22 +334,21 @@ function* parseFunction(const char* theFunction)
         {                                                                 //then recursion parseFunction and save functionPart head to parenthesis part.
             if (!isParenthesis)
             {
-                parenthesisOpenIndex = i;
-                isParenthesis = 1;
-
-                if (i == 0 || strlen(functionBuilder) == 0)
-                    appendStr(functionBuilder, &c, 1);
-
-                else {
+                if (hasOperation)
+                    addToFunctionList(&func->head, functionBuilder, tempOp);
+                else
                     addToFunctionList(&func->head, functionBuilder, MUL);
-                    appendStr(functionBuilder, &c, 1);
-                } 
+
+                while (i < strlen(theFunction)-1)
+                {
+                    if(theFunction[i+1] == ')') {
+                        
+                    }
+                }
             } else
                 appendStr(functionBuilder, &c, 1);
 
-            if (hasOperation)
-                hasOperation = 0;
-
+            hasOperation = 0;
             ++parenthesisBalance;
         }
  

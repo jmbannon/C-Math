@@ -1,20 +1,7 @@
 #ifndef PARSE_H_
 #define PARSE_H_
-
-typedef enum operations opType;
-typedef enum trigFunctions trigType;
-typedef struct function function;
-typedef struct function_part functionPart;
-typedef struct function_part_base base;
-
-typedef struct variable var;
-typedef struct variableList varList;
-
-typedef struct numeric num;
-typedef struct trigonometry trig;
-typedef struct logarithm log;
+#include "Function.h"
 
 function* parseFunction(const char* theFunction);
-void printInfo(function* theFunction);
 
 #endif

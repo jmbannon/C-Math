@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "Parse.h"
+#include "Function.h"
 
 int main(void) {
     char* test = ".354^-5+74x-56y";
