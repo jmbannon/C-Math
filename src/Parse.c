@@ -332,6 +332,8 @@ function* parseFunction(const char* theFunction)
         /* OPENING PARENTHESIS, NEEDS OVERHAUL */                         //Should check to see if there is an operator, if not add to functionBuilder as MUL
         else if (c == '(')                                                //Should iterate through entire string adding characters until closing parenthesis is met,
         {                                                                 //then recursion parseFunction and save functionPart head to parenthesis part.
+            ++parenthesisBalance;
+                                                                          
             if (!isParenthesis)
             {
                 if (hasOperation)
@@ -341,15 +343,47 @@ function* parseFunction(const char* theFunction)
 
                 while (i < strlen(theFunction)-1)
                 {
-                    if(theFunction[i+1] == ')') {
-                        
-                    }
+                    if(theFunction[++i] != ')')
+                        appendStr(functionBuilder, &theFunction[i], 1);
+
+                    else 
+                    {
+                        --parenthesisBalance;
+                        if (parenthesisBalance == 0)
+                        {
+                            switch(theFunction[i+1]) 
+                            {
+                            case '+': addToFunctionList
+                                (&func->head, functionBuilder, ADD); 
+                                break; 
+                            
+                            case '-': addToFunctionList
+                                (&func->head, functionBuilder, SUB); 
+                                break; 
+
+                            case '/': addToFunctionList
+                                (&func->head, functionBuilder, DIV); 
+                                break;
+
+                            case '\0': addToFunctionList
+                                (&func->head, functionBuilder, NOOP); 
+                                break;
+
+                            default: addToFunctionList
+                                (&func->head, functionBuilder, MUL); 
+                                break;
+
+                            break;
+                            }
+                        }
+                        else
+                            appendStr(functionBuilder, &theFunction[i], 1);
+                    }    
                 }
             } else
                 appendStr(functionBuilder, &c, 1);
 
-            hasOperation = 0;
-            ++parenthesisBalance;
+            hasOperation = 0;            
         }
  
         else if (c == ')')                                                        //Should always be acknowledged in '(' to close parenthesis, if it is found in function
