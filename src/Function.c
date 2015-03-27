@@ -93,7 +93,7 @@ void addToFunctionList(functionPart** head, char* functionBuilder,
     thePart->str = malloc(strlen(functionBuilder) + 1);
     strcpy(thePart->str, functionBuilder);
 
-    freeString(functionBuilder);
+    functionBuilder[0] = '\0';
 
     thePart->operation = operation;
     

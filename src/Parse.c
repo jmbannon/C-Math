@@ -28,7 +28,7 @@ function* parseFunction(const char* theFunction)
     function* func;
     func = initializeFunction(theFunction);
 
-    char* functionBuilder = malloc(0);
+    char functionBuilder[1024] = {0};
     char c, tempChar;
 
     for (i = 0; i < strlen(theFunction); i++) 
@@ -51,7 +51,7 @@ function* parseFunction(const char* theFunction)
             }
 
             else
-                append(functionBuilder, c);       
+                appendChar(functionBuilder, c);       
 
            hasOperation = 0;
         }
@@ -73,7 +73,7 @@ function* parseFunction(const char* theFunction)
                      printf("New part!\n");
                 }
 
-                appendStr(&functionBuilder, &theFunction[i], 3);
+                appendStr(functionBuilder, &theFunction[i], 3);
                 i += 3;
 
                 goto parseParenthesis;  // line 338
@@ -92,7 +92,7 @@ function* parseFunction(const char* theFunction)
             }
 
             else if (isParenthesis || isFunction)
-                appendStr(&functionBuilder, &c, 1);
+                appendStr(functionBuilder, &c, 1);
 
             /* Assume it's a variable */
             else
@@ -104,7 +104,7 @@ function* parseFunction(const char* theFunction)
                  } else 
                      hasVariable = 1;
 
-                 appendStr(&functionBuilder, &c, 1);
+                 appendStr(functionBuilder, &c, 1);
             }
 
             hasOperation = 0;
@@ -130,10 +130,10 @@ function* parseFunction(const char* theFunction)
 
                  /* If a number does not precede decimal, add 0 first. */
                  else if (i == 0 || !isdigit(theFunction[i-1]))
-                     appendStr(&functionBuilder, &tempChar, 1);
+                     appendStr(functionBuilder, &tempChar, 1);
 
                  /* Append and set hasDecimal to true. */
-                 appendStr(&functionBuilder, &c, 1);
+                 appendStr(functionBuilder, &c, 1);
                  hasDecimal = 1;
             }
 
@@ -179,7 +179,7 @@ function* parseFunction(const char* theFunction)
 
                     else 
                     {
-                        appendStr(&functionBuilder, &c, 1);
+                        appendStr(functionBuilder, &c, 1);
                         hasNegative = 1;
                     }
                 }                
@@ -227,7 +227,7 @@ function* parseFunction(const char* theFunction)
                  * in recursion 
                  */
                 else
-                    appendStr(&functionBuilder, &c, 1);
+                    appendStr(functionBuilder, &c, 1);
 
                 hasNegative = 0;
                 hasDecimal = 0;
@@ -263,7 +263,7 @@ function* parseFunction(const char* theFunction)
                 // and decimal to false for exponent number                 
                 else 
                 {
-                    appendStr(&functionBuilder, &theFunction[i], 1);
+                    appendStr(functionBuilder, &theFunction[i], 1);
                     hasExponent = 1;
                     hasNegative = 0;
                     hasDecimal = 0;
@@ -312,7 +312,7 @@ function* parseFunction(const char* theFunction)
 
             // Otherwise append to function to deal with in recursion
             else
-                appendStr(&functionBuilder, &c, 1);
+                appendStr(functionBuilder, &c, 1);
 
             // Clears negative, decimal, and exponent 
             // for next value after operation 
@@ -337,7 +337,7 @@ function* parseFunction(const char* theFunction)
             {
                 // Always appends opening parenthesis to 
                 // appear in functionPart string
-                appendStr(&functionBuilder, &theFunction[i], 1);
+                appendStr(functionBuilder, &theFunction[i], 1);
 
                 // (Function handles operations) 
                 // Assume it's implicit multiplication
@@ -349,13 +349,13 @@ function* parseFunction(const char* theFunction)
                     printf("i = %d, parenth = %d\n", i, parenthesisBalance);
                     if(theFunction[++i] != ')') {
 			printf("break?\n");
-                        appendStr(&functionBuilder, &theFunction[i], 1);
+                        appendStr(functionBuilder, &theFunction[i], 1);
                    }
 
                     else 
                     {
                         --parenthesisBalance;
-                        appendStr(&functionBuilder, &theFunction[i], 1);
+                        appendStr(functionBuilder, &theFunction[i], 1);
                         
                         if (parenthesisBalance == 0)
                         {
@@ -387,7 +387,7 @@ function* parseFunction(const char* theFunction)
                     }    
                 }
             } else
-                appendStr(&functionBuilder, &c, 1);
+                appendStr(functionBuilder, &c, 1);
 
             isFunction = 0;
             isParenthesis = 0;            

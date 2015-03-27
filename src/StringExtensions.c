@@ -3,34 +3,38 @@
 #include <string.h>
 #include <ctype.h>
 
-void append(char* string, const char c) {
-    size_t len = strlen(string);
-    string = (char *)realloc(string, len+1);
-    if (string == NULL) {
-        printf("* ERROR [append]:\n"
-               "* Could not reallocate enough memory for functionBuilder.\n");
+void appendChar(char* string, const char c) {
+
+    if (strlen(string)+1 >= 1024) {
+        printf("* ERROR [appendChar]:\n"
+               "* Not enough memory to store function builder >= 1024 "
+               "characters.\n");
         return;
     }
 
-    strncat(string, &c, 1);
+    sprintf(string, "%s%c", string, c);
 }
 
-void appendStr(char** string, const char* toCopy, const int charAmount) 
+void appendStr(char* string, const char* toCopy, const int charAmount) 
 {
-    if (charAmount < 0)
+    if (charAmount < 0) {
         printf("* ERROR [appendStr]:\n"
                "* Character amount must be greater than 0.\n");
-
-    size_t len = strlen(*string);
-    *string = (char *)realloc(*string, len+charAmount);
-    if (!string) 
-    {
-        printf("* ERROR [append]:\n"
-               "* Could not reallocate enough memory for functionBuilder.\n");
         return;
     }
-    
-    strncat(*string, toCopy, charAmount);
+
+    else if (strlen(string) + charAmount >= 1024)
+    {
+        printf("* ERROR [appendStr]:\n"
+               "* Not enough memory to store function builder >= 1024 "
+               "characters.\n");
+        return;
+    }
+
+    if (string[0] != '\0')
+        sprintf(string, "%s%.*s", string, charAmount, toCopy);
+    else
+        sprintf(string, "%.*s", charAmount, toCopy);
 }
 
 void removeChar(char* string, const int index) {
@@ -44,9 +48,4 @@ void removeChar(char* string, const int index) {
         return;
 
     memmove((void*)&string[index], (void*)&string[index+1], len-index);
-}
-
-void freeString(char* string) {
-    free(string);
-    string = malloc(0);
 }
