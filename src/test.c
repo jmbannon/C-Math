@@ -14,7 +14,7 @@
 #include "Function.h"
 
 int main(void) {
-    char* test = ".354^-5+74x-56y";
+    char* test = ".354^-5+(74x-56y)sin(59x)+(45)";
     function* theFunc = parseFunction(test);
     printInfo(theFunc);
     return 0;

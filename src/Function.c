@@ -3,6 +3,70 @@
 #include <string.h>
 #include "Function.h"
 
+struct variable {
+    char variable;
+    int prime;
+};
+
+struct variableList {
+    var var;
+    var* next;
+};
+
+struct function {
+    char* str;
+    functionPart* head;
+    varList variables;
+};
+
+struct numeric {
+    double constant;
+};
+
+struct trigonometry {
+    trigType trigType;
+    functionPart* contents;
+};
+
+struct logarithm {
+    double base;
+    functionPart* contents;
+};
+
+struct function_part {
+    char* str;
+    union part_union 
+    {
+        functionPart* parenthesis;
+        num* num;
+        trig* trig;
+        log* log;
+    } part;
+    
+    union part_exponent 
+    {
+        num* num;
+        functionPart* parenthesis;
+    } exponent;
+
+    opType operation;
+    functionPart* prev;
+    functionPart* next;
+};
+
+function* initializeFunction(const char* theFunction) {
+    function* func = malloc(sizeof(function));
+
+    func->str = malloc(strlen(theFunction)+1);
+    strcpy(func->str, theFunction);
+    func->head = NULL;
+    return func;
+}
+
+functionPart** getHead(function* theFunction) {
+    return &(theFunction->head);
+}
+
 void printInfo(function* theFunction) 
 {
     if (!theFunction)
