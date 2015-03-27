@@ -15,20 +15,22 @@ void append(char* string, const char c) {
     strncat(string, &c, 1);
 }
 
-void appendStr(char* string, const char* toCopy, const int charAmount) {
+void appendStr(char** string, const char* toCopy, const int charAmount) 
+{
     if (charAmount < 0)
         printf("* ERROR [appendStr]:\n"
                "* Character amount must be greater than 0.\n");
 
-    size_t len = strlen(string);
-    string = (char *)realloc(string, len+charAmount);
-    if (string == NULL) {
+    size_t len = strlen(*string);
+    *string = (char *)realloc(*string, len+charAmount);
+    if (!string) 
+    {
         printf("* ERROR [append]:\n"
                "* Could not reallocate enough memory for functionBuilder.\n");
         return;
     }
-
-    strncat(string, toCopy, charAmount);
+    
+    strncat(*string, toCopy, charAmount);
 }
 
 void removeChar(char* string, const int index) {

@@ -73,7 +73,7 @@ function* parseFunction(const char* theFunction)
                      printf("New part!\n");
                 }
 
-                appendStr(functionBuilder, &theFunction[i], 3);
+                appendStr(&functionBuilder, &theFunction[i], 3);
                 i += 3;
 
                 goto parseParenthesis;  // line 338
@@ -92,7 +92,7 @@ function* parseFunction(const char* theFunction)
             }
 
             else if (isParenthesis || isFunction)
-                appendStr(functionBuilder, &c, 1);
+                appendStr(&functionBuilder, &c, 1);
 
             /* Assume it's a variable */
             else
@@ -104,7 +104,7 @@ function* parseFunction(const char* theFunction)
                  } else 
                      hasVariable = 1;
 
-                 appendStr(functionBuilder, &c, 1);
+                 appendStr(&functionBuilder, &c, 1);
             }
 
             hasOperation = 0;
@@ -130,10 +130,10 @@ function* parseFunction(const char* theFunction)
 
                  /* If a number does not precede decimal, add 0 first. */
                  else if (i == 0 || !isdigit(theFunction[i-1]))
-                     appendStr(functionBuilder, &tempChar, 1);
+                     appendStr(&functionBuilder, &tempChar, 1);
 
                  /* Append and set hasDecimal to true. */
-                 appendStr(functionBuilder, &c, 1);
+                 appendStr(&functionBuilder, &c, 1);
                  hasDecimal = 1;
             }
 
@@ -158,7 +158,8 @@ function* parseFunction(const char* theFunction)
                 if (strlen(functionBuilder) != 0 
                        && !isParenthesis 
                        && !isFunction 
-                       && !hasOperation) 
+                       && !hasOperation
+                       && !hasExponent) 
                 {
                     addToFunctionList(getHead(func), functionBuilder, SUB);
                     printf("new part!\n");
@@ -178,7 +179,7 @@ function* parseFunction(const char* theFunction)
 
                     else 
                     {
-                        appendStr(functionBuilder, &c, 1);
+                        appendStr(&functionBuilder, &c, 1);
                         hasNegative = 1;
                     }
                 }                
@@ -226,7 +227,7 @@ function* parseFunction(const char* theFunction)
                  * in recursion 
                  */
                 else
-                    appendStr(functionBuilder, &c, 1);
+                    appendStr(&functionBuilder, &c, 1);
 
                 hasNegative = 0;
                 hasDecimal = 0;
@@ -238,6 +239,8 @@ function* parseFunction(const char* theFunction)
         /* EXPONENT NEEDS REWORK!!!!!!!!!! */                                         // Since exponent is a pointer of every functionPart, it must
         else if (c == '^')                                                            // find the most recent functionPart and determine whether it is a
         {                                                                             // number or other (should be in parenthesis and be classified as functionPart).
+            parseExponent:  
+                                                                       
             if (!hasExponent) 
             {
             
@@ -260,8 +263,7 @@ function* parseFunction(const char* theFunction)
                 // and decimal to false for exponent number                 
                 else 
                 {
-                    appendStr(functionBuilder, &c, 1);
-                    hasOperation = 1;
+                    appendStr(&functionBuilder, &theFunction[i], 1);
                     hasExponent = 1;
                     hasNegative = 0;
                     hasDecimal = 0;
@@ -310,7 +312,7 @@ function* parseFunction(const char* theFunction)
 
             // Otherwise append to function to deal with in recursion
             else
-                appendStr(functionBuilder, &c, 1);
+                appendStr(&functionBuilder, &c, 1);
 
             // Clears negative, decimal, and exponent 
             // for next value after operation 
@@ -335,54 +337,57 @@ function* parseFunction(const char* theFunction)
             {
                 // Always appends opening parenthesis to 
                 // appear in functionPart string
-                appendStr(functionBuilder, &theFunction[i], 1);
+                appendStr(&functionBuilder, &theFunction[i], 1);
 
                 // (Function handles operations) 
                 // Assume it's implicit multiplication
-                if (!hasOperation && !isFunction)
+                if (!hasOperation && !isFunction && !hasExponent) 
                     addToFunctionList(getHead(func), functionBuilder, MUL);
 
                 while (i < strlen(theFunction)-1)
                 {
-                    if(theFunction[++i] != ')')
-                        appendStr(functionBuilder, &theFunction[i], 1);
+                    printf("i = %d, parenth = %d\n", i, parenthesisBalance);
+                    if(theFunction[++i] != ')') {
+			printf("break?\n");
+                        appendStr(&functionBuilder, &theFunction[i], 1);
+                   }
 
                     else 
                     {
                         --parenthesisBalance;
-                        appendStr(functionBuilder, &theFunction[i], 1);
+                        appendStr(&functionBuilder, &theFunction[i], 1);
                         
                         if (parenthesisBalance == 0)
                         {
                             switch(theFunction[i+1]) 
                             {
-                            case '+': addToFunctionList
-                                (getHead(func), functionBuilder, ADD); ++i; hasOperation = 1;
+                            case '+': tempOp = ADD; ++i; hasOperation = 1;
                                 break; 
                             
-                            case '-': addToFunctionList
-                                (getHead(func), functionBuilder, SUB); ++i; hasOperation = 1;
+                            case '-': tempOp = SUB; ++i; hasOperation = 1;
                                 break; 
 
-                            case '/': addToFunctionList
-                                (getHead(func), functionBuilder, DIV); ++i; hasOperation = 1;
+                            case '/': tempOp = DIV; ++i; hasOperation = 1;
                                 break;
 
-                            case '\0': addToFunctionList
-                                (getHead(func), functionBuilder, NOOP); 
+                            case '\0': tempOp = NOOP; 
                                 break;
 
-                            default: addToFunctionList
-                                (getHead(func), functionBuilder, MUL); hasOperation = 1;
+                            case '^':  isParenthesis = 0; isFunction = 0; 
+                                       ++i; goto parseExponent;
+
+                            default: tempOp = MUL; hasOperation = 1;
                                 break; 
                             }
-                            
+                            addToFunctionList(getHead(func), 
+                                              functionBuilder, 
+                                              tempOp); 
                             break;
                         }  
                     }    
                 }
             } else
-                appendStr(functionBuilder, &c, 1);
+                appendStr(&functionBuilder, &c, 1);
 
             isFunction = 0;
             isParenthesis = 0;            
