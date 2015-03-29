@@ -31,8 +31,9 @@
 #include "Function.h"
 #include "StringExtensions.h"
 
-function* parseFunction(const char* theFunction) 
-{
+function* parseFunction(
+        const char* theFunction
+) {
     int i; /* iterator */
 
     int parenthesisBalance = 0;
@@ -432,7 +433,9 @@ function* parseFunction(const char* theFunction)
     return func;
 }
 
-functionPart* parseFunctionPart(const char* functionStr) {
+functionPart* parseFunctionPart(
+        const char* functionStr
+) {
     functionPart** funcPart;
     
     function* func = parseFunction(functionStr);

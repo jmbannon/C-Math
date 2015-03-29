@@ -13,37 +13,52 @@
 #include <string.h>
 #include "Function.h"
 
-struct variable {
+/* 
+ =======================================================================
+
+        Structs
+
+ =======================================================================
+*/
+
+struct variable 
+{
     char variable;
     int prime;
 };
 
-struct variableList {
+struct variableList 
+{
     var var;
     var* next;
 };
 
-struct function {
+struct function 
+{
     char* str;
     functionPart* head;
     varList variables;
 };
 
-struct numeric {
+struct numeric 
+{
     double constant;
 };
 
-struct trigonometry {
+struct trigonometry 
+{
     trigType trigType;
     functionPart* contents;
 };
 
-struct logarithm {
+struct logarithm 
+{
     double base;
     functionPart* contents;
 };
 
-struct function_part {
+struct function_part 
+{
     char* str;
     union part_union 
     {
@@ -64,7 +79,27 @@ struct function_part {
     functionPart* next;
 };
 
-function* initializeFunction(const char* theFunction) {
+/* 
+ =======================================================================
+
+        Function Prototypes
+
+ =======================================================================
+*/
+
+//TODO
+
+/* 
+ =======================================================================
+
+        Functions
+
+ =======================================================================
+*/
+
+function* initializeFunction(
+        const char* theFunction
+) {
     function* func = malloc(sizeof(function));
 
     func->str = malloc(strlen(theFunction)+1);
@@ -73,12 +108,15 @@ function* initializeFunction(const char* theFunction) {
     return func;
 }
 
-functionPart** getHead(function* theFunction) {
+functionPart** getHead(
+        function* theFunction
+) {
     return &(theFunction->head);
 }
 
-void printInfo(function* theFunction) 
-{
+void printInfo(
+        function* theFunction
+) {
     if (!theFunction)
         return;
 
@@ -94,9 +132,11 @@ void printInfo(function* theFunction)
     }
 }
 
-void addToFunctionList(functionPart** head, char* functionBuilder,
-                       const opType operation)
-{
+void addToFunctionList(
+        functionPart** head, 
+        char* functionBuilder,          
+        const opType operation
+) {
     functionPart* thePart = malloc(sizeof(functionPart));
     functionPart* currTemp = *head;
 
@@ -124,8 +164,9 @@ void addToFunctionList(functionPart** head, char* functionBuilder,
     thePart->next = NULL;
 }
 
-trigType isTrigFunction(const char* firstLetter) 
-{
+trigType isTrigFunction(
+        const char* firstLetter
+) {
     if (strncmp(firstLetter, "sin(", 4) == 0)
         return SIN;
 

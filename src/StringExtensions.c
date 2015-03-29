@@ -13,7 +13,9 @@
 #include <string.h>
 #include <ctype.h>
 
-void appendChar(char* string, const char c) {
+void appendChar(
+        char* string, const char c
+) {
 
     if (strlen(string)+1 >= 1024) {
         printf("* ERROR [appendChar]:\n"
@@ -25,8 +27,11 @@ void appendChar(char* string, const char c) {
     sprintf(string, "%s%c", string, c);
 }
 
-void appendStr(char* string, const char* toCopy, const int charAmount) 
-{
+void appendStr(
+        char* string, 
+        const char* toCopy, 
+        const int charAmount
+) {
     if (charAmount < 0) {
         printf("* ERROR [appendStr]:\n"
                "* Character amount must be greater than 0.\n");
@@ -47,12 +52,18 @@ void appendStr(char* string, const char* toCopy, const int charAmount)
         sprintf(string, "%.*s", charAmount, toCopy);
 }
 
-void removeChar(char* string, const int index) {
+void removeChar(
+        char* string, 
+        const int index
+) {
     size_t len = strlen(string);
-    if (index < 0 || index > len) {
-        printf("* ERROR [removeChar]:\n"
-               "* Index out of range.\n");
-        printf("*   String: %s\n*   Index: %d\n", string, index);
+    if (index < 0 || index > len) 
+    {
+        printf(
+        "* ERROR [removeChar]:\n"
+        "* Index out of range.\n"
+        "*   String: %s\n*   Index: %d\n", string, index);
+
         return;
     } else if (index == len)
         return;
