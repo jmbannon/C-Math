@@ -1,3 +1,28 @@
+/* 
+ =======================================================================
+ Parse.c
+
+ Jesse Bannon
+ 
+ Parses equations into a double linked list of functionParts. Each
+ functionPart contains the following: 
+
+ - String (of the part)
+ - Union Type
+   - Parenthesis (a pointer to head of the functionPart in parenthesis)
+   - Numeric
+   - Trig function
+   - Log
+ - Union Exponent
+   - Numeric
+   - Parenthesis (anything other than a numeric)
+ - Operator (that proceeds the functionPart) 
+
+ Will return null if there is a parsing error and print the
+ problem and the index the problem occured at.
+ =======================================================================
+*/
+ 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -339,7 +364,6 @@ function* parseFunction(const char* theFunction)
 
                 while (i < strlen(theFunction)-1)
                 {
-                    printf("i = %d, parenth = %d, char = %c\n", i, parenthesisBalance, theFunction[i]);
                     ++i;
                     if (theFunction[i] != ')' && theFunction[i] != '(') 
                     {

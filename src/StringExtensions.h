@@ -1,3 +1,13 @@
+/* 
+ =======================================================================
+ StringExtensions.h
+
+ Jesse Bannon
+
+ TODO
+ =======================================================================
+*/
+
 #ifndef STRINGEXTENSIONS_H_
 #define STRINGEXTENSIONS_H_
 
