@@ -14,12 +14,15 @@
 #include <ctype.h>
 
 char* removeEnds(
-        char* functionPart_str
+        char* functionPart_str,
+        const size_t amount
 ) {
     size_t len = strlen(functionPart_str);
-    char* endRemoved = malloc(len-1);
-    strncpy(endRemoved, functionPart_str+1, len-2);
-    printf("returning %s\n", endRemoved);
+    char* endRemoved = malloc(len-(2*amount)+1);
+
+    strncpy(endRemoved, functionPart_str+amount, len-(2*amount));
+    endRemoved[len-(2*amount)] = '\0';
+
     return endRemoved;
 } 
 

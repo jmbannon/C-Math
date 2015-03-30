@@ -13,6 +13,8 @@
 #include <string.h>
 #include "Function.h"
 
+#define bool unsigned char
+
 /* 
  =======================================================================
 
@@ -101,18 +103,23 @@ void initializePart(
         functionPart** thePart
 ) {
 
-   
-    printf("recursion!\n");
-    printf("the string reference = %s len = %d\n", removeEnds((*thePart)->str), strlen((*thePart)->str));
     int i;
-    for (i = 0; i < strlen((*thePart)->str); i++) {
-        if ((*thePart)->str[0] == '(')
+
+    bool openingParenthesis = 1;
+
+    
+    for (i = 0; i < strlen((*thePart)->str); i++) 
+    {
+        if ((*thePart)->str[i] == '(')
         {
             
-            parseFunction(removeEnds((*thePart)->str));
-           
-            //(*thePart)->part.parenthesis;
-            return;
+            //Do stuff
+        } else 
+        {
+            if (openingParenthesis && i != 0)
+                 parseFunction(removeEnds((*thePart)->str, i));
+
+            openingParenthesis = 0;
         }
     }
 

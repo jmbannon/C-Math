@@ -31,6 +31,8 @@
 #include "Function.h"
 #include "StringExtensions.h"
 
+#define bool unsigned char
+
 function* parseFunction(
         const char* theFunction
 ) {
@@ -38,16 +40,16 @@ function* parseFunction(
 
     int parenthesisBalance = 0;
 
-    int hasOperation = 0;
-    int hasNegative = 0;
-    int hasNumber = 0;
-    int hasPrime = 0;
-    int hasDecimal = 0;
-    int hasExponent = 0;
-    int hasVariable = 0;
+    bool hasOperation = 0;
+    bool hasNegative = 0;
+    bool hasNumber = 0;
+    bool hasPrime = 0;
+    bool hasDecimal = 0;
+    bool hasExponent = 0;
+    bool hasVariable = 0;
  
-    int isParenthesis = 0;
-    int isFunction = 0;
+    bool isParenthesis = 0;
+    bool isFunction = 0;
 
     opType tempOp;
     
@@ -287,6 +289,7 @@ function* parseFunction(
                     hasExponent = 1;
                     hasNegative = 0;
                     hasDecimal = 0;
+                    hasVariable = 0;
                 }
 
             // If exponent sign already exists, throw exception
