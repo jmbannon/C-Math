@@ -123,14 +123,14 @@ function* parseFunction(
             // Assume it's a variable
             else
             {
-                 if (hasVariable)
+                 if (functionBuilder[0] != '\0')
                  {
                      addToFunctionList(getHead(func), functionBuilder, MUL);
                      //printf("New Part!\n");
-                 } else 
-                     hasVariable = 1;
-
+                 }
+                     
                  appendStr(functionBuilder, &c, 1);
+                 hasVariable = 1;
             }
 
             hasOperation = 0;
@@ -189,6 +189,10 @@ function* parseFunction(
                     addToFunctionList(getHead(func), functionBuilder, SUB);
                     //printf("new part!\n");
                     hasOperation = 1;
+                    hasNegative = 0;
+                    hasDecimal = 0;
+                    hasExponent = 0;
+                    hasVariable = 0;
 
                 // Otherwise append to function
                 } else 
@@ -254,7 +258,7 @@ function* parseFunction(
                 hasNegative = 0;
                 hasDecimal = 0;
                 hasExponent = 0;
-                
+                hasVariable = 0;
             }
         }
 
@@ -395,7 +399,7 @@ function* parseFunction(
                             case '/': tempOp = DIV; ++i; hasOperation = 1;
                                 break;
 
-                            case '\0': tempOp = NOOP; 
+                            case '\0': tempOp = NOOP; hasOperation = 0;
                                 break;
 
                             case '^':  isParenthesis = 0; isFunction = 0; 
@@ -408,6 +412,11 @@ function* parseFunction(
                             addToFunctionList(getHead(func), 
                                               functionBuilder, 
                                               tempOp); 
+
+                            hasNegative = 0;
+                            hasDecimal = 0;
+                            hasExponent = 0;
+                            hasVariable = 0;
                             break;
                         }  
                     }    
@@ -438,6 +447,29 @@ function* parseFunction(
     //TODO
     // - End of parse errors
     // Append last function part
+
+    if (functionBuilder[0] != '\0')
+        addToFunctionList(getHead(func), 
+                          functionBuilder, 
+                          NOOP); 
+
+    if (hasOperation)
+    {
+        printf(
+        "* ERROR [parseFunction]:\n"
+        "* Last operator does not operate on anything.\n"
+        "*   Function: %s\n*   Index: end of function\n", theFunction);
+        return NULL;
+    }
+
+    if (parenthesisBalance != 0)
+    {
+        printf(
+        "* ERROR [parseFunction]:\n"
+        "* Parenthesis do not balance.\n"
+        "*   Function: %s\n*   Index: end of function\n", theFunction);
+        return NULL;
+    }
 
     printf("%s\n", functionBuilder);
     return func;

@@ -24,6 +24,6 @@ handle algebraic computations.
   - Be able to do everything previously stated in terminal
 - Other
   - Clean repository
-  - Create makefile
+  - ~Create makefile~
 
 
