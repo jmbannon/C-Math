@@ -13,6 +13,16 @@
 #include <string.h>
 #include <ctype.h>
 
+char* removeEnds(
+        char* functionPart_str
+) {
+    size_t len = strlen(functionPart_str);
+    char* endRemoved = malloc(len-1);
+    strncpy(endRemoved, functionPart_str+1, len-2);
+    printf("returning %s\n", endRemoved);
+    return endRemoved;
+} 
+
 void appendChar(
         char* string, const char c
 ) {

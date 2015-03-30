@@ -354,25 +354,27 @@ function* parseFunction(
                                                                           
             if (!isParenthesis)
             {
+                // (Function handles operations) 
+                // Assume it's implicit multiplication
+                printf("%d %d %d\n", hasOperation, isFunction, hasExponent);
+                if (!hasOperation && !isFunction && !hasExponent 
+                        && strlen(functionBuilder) != 0) 
+                    addToFunctionList(getHead(func), functionBuilder, MUL);
+
                 // Always appends opening parenthesis to 
                 // appear in functionPart string
                 appendStr(functionBuilder, &theFunction[i], 1);
-
-                // (Function handles operations) 
-                // Assume it's implicit multiplication
-                if (!hasOperation && !isFunction && !hasExponent) 
-                    addToFunctionList(getHead(func), functionBuilder, MUL);
 
                 while (i < strlen(theFunction)-1)
                 {
                     ++i;
                     if (theFunction[i] != ')' && theFunction[i] != '(') 
-                    {
-			printf("break?\n");
                         appendStr(functionBuilder, &theFunction[i], 1);
-                    } else if (theFunction[i] == '(')
+                    
+                    else if (theFunction[i] == '(') {
                         ++parenthesisBalance;
-                    else 
+                        appendStr(functionBuilder, &theFunction[i], 1);
+                    } else 
                     {
                         --parenthesisBalance;
                         appendStr(functionBuilder, &theFunction[i], 1);
@@ -399,6 +401,7 @@ function* parseFunction(
                             default: tempOp = MUL; hasOperation = 1;
                                 break; 
                             }
+                            printf("the function builder = %s\n", functionBuilder);
                             addToFunctionList(getHead(func), 
                                               functionBuilder, 
                                               tempOp); 
@@ -428,6 +431,10 @@ function* parseFunction(
     
 
     } //end of forloop
+
+    //TODO
+    // - End of parse errors
+    // Append last function part
 
     printf("%s\n", functionBuilder);
     return func;

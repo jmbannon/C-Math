@@ -97,6 +97,28 @@ struct function_part
  =======================================================================
 */
 
+void initializePart(
+        functionPart** thePart
+) {
+
+   
+    printf("recursion!\n");
+    printf("the string reference = %s len = %d\n", removeEnds((*thePart)->str), strlen((*thePart)->str));
+    int i;
+    for (i = 0; i < strlen((*thePart)->str); i++) {
+        if ((*thePart)->str[0] == '(')
+        {
+            
+            parseFunction(removeEnds((*thePart)->str));
+           
+            //(*thePart)->part.parenthesis;
+            return;
+        }
+    }
+
+
+}
+
 function* initializeFunction(
         const char* theFunction
 ) {
@@ -142,6 +164,7 @@ void addToFunctionList(
 
     thePart->str = malloc(strlen(functionBuilder) + 1);
     strcpy(thePart->str, functionBuilder);
+    initializePart(&thePart);
 
     functionBuilder[0] = '\0';
 
