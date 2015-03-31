@@ -54,7 +54,7 @@ function* parseFunction(
     opType tempOp;
     
     function* func;
-    func = initializeFunction(theFunction);
+    initializeFunction(func, theFunction);
 
     char functionBuilder[1024] = {0};
     char c, tempChar;

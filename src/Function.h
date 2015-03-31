@@ -91,7 +91,8 @@ enum partType {
  =======================================================================
 */
 
-function* initializeFunction(
+void initializeFunction(
+        function* func,
         const char* theFunction
 );
 

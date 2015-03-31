@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "Function.h"
+#include "Parse.h"
 
 #define bool unsigned char
 
@@ -104,10 +105,10 @@ void initializePart(
 ) {
 
     int i;
-
     bool openingParenthesis = 1;
+    function* newPart;
 
-    
+    printf("thePart = %s\n", (*thePart)->str);
     for (i = 0; i < strlen((*thePart)->str); i++) 
     {
         if ((*thePart)->str[i] == '(')
@@ -117,24 +118,24 @@ void initializePart(
         } else 
         {
             if (openingParenthesis && i != 0)
-                 parseFunction(removeEnds((*thePart)->str, i));
-
+                 //newPart = parseFunction(removeEnds((*thePart)->str, i));
+            
             openingParenthesis = 0;
         }
     }
-
+    printInfo(newPart);
 
 }
 
-function* initializeFunction(
+void initializeFunction(
+        function* func,
         const char* theFunction
 ) {
-    function* func = malloc(sizeof(function));
+    func = malloc(sizeof(function));
 
     func->str = malloc(strlen(theFunction)+1);
     strcpy(func->str, theFunction);
     func->head = NULL;
-    return func;
 }
 
 functionPart** getHead(
