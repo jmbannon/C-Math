@@ -92,7 +92,7 @@ enum partType {
 */
 
 void initializeFunction(
-        function* func,
+        function** func,
         const char* theFunction
 );
 

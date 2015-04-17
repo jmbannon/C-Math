@@ -123,19 +123,19 @@ void initializePart(
             openingParenthesis = 0;
         }
     }
-    printInfo(newPart);
+    //printInfo(newPart);
 
 }
 
 void initializeFunction(
-        function* func,
+        function** func,
         const char* theFunction
 ) {
-    func = malloc(sizeof(function));
+    (*func) = malloc(sizeof(function));
 
-    func->str = malloc(strlen(theFunction)+1);
-    strcpy(func->str, theFunction);
-    func->head = NULL;
+    (*func)->str = malloc(strlen(theFunction)+1);
+    strcpy((*func)->str, theFunction);
+    (*func)->head = NULL;
 }
 
 functionPart** getHead(
@@ -185,7 +185,7 @@ void addToFunctionList(
         *head = thePart;
         return;
     }
-    while (currTemp->next != NULL)
+    while (currTemp != NULL && currTemp->next != NULL)
     {
         currTemp = currTemp->next;
     }
