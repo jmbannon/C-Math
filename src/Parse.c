@@ -30,8 +30,7 @@
 #include "Parse.h"
 #include "Function.h"
 #include "StringExtensions.h"
-
-#define bool unsigned char
+#include "Boolean.h"
 
 function* parseFunction(
         const char* theFunction
@@ -40,16 +39,16 @@ function* parseFunction(
 
     int parenthesisBalance = 0;
 
-    bool hasOperation = 0;
-    bool hasNegative = 0;
-    bool hasNumber = 0;
-    bool hasPrime = 0;
-    bool hasDecimal = 0;
-    bool hasExponent = 0;
-    bool hasVariable = 0;
+    bool hasOperation = false;
+    bool hasNegative = false;
+    bool hasNumber = false;
+    bool hasPrime = false;
+    bool hasDecimal = false;
+    bool hasExponent = false;
+    bool hasVariable = false;
  
-    bool isParenthesis = 0;
-    bool isFunction = 0;
+    bool isParenthesis = false;
+    bool isFunction = false;
 
     opType tempOp;
     
@@ -80,7 +79,7 @@ function* parseFunction(
             else
                 appendChar(functionBuilder, c);       
 
-           hasOperation = 0;
+           hasOperation = false;
         }
 
         /* LETTERS */
@@ -91,7 +90,7 @@ function* parseFunction(
             // function to equationList and create new function 
             if (isTrigFunction(&theFunction[i])) 
             {
-                isFunction = 1;
+                isFunction = true;
 
                 if (!hasOperation)
                 {
@@ -130,10 +129,10 @@ function* parseFunction(
                  }
                      
                  appendStr(functionBuilder, &c, 1);
-                 hasVariable = 1;
+                 hasVariable = true;
             }
 
-            hasOperation = 0;
+            hasOperation = false;
         }
 
         /* DECIMAL POINT */
@@ -160,7 +159,7 @@ function* parseFunction(
 
                  /* Append and set hasDecimal to true. */
                  appendStr(functionBuilder, &c, 1);
-                 hasDecimal = 1;
+                 hasDecimal = true;
             }
 
             else 
@@ -188,11 +187,11 @@ function* parseFunction(
                 {
                     addToFunctionList(getHead(func), functionBuilder, SUB);
                     //printf("new part!\n");
-                    hasOperation = 1;
-                    hasNegative = 0;
-                    hasDecimal = 0;
-                    hasExponent = 0;
-                    hasVariable = 0;
+                    hasOperation = true;
+                    hasNegative = false;
+                    hasDecimal = false;
+                    hasExponent = false;
+                    hasVariable = false;
 
                 // Otherwise append to function
                 } else 
@@ -209,7 +208,7 @@ function* parseFunction(
                     else 
                     {
                         appendStr(functionBuilder, &c, 1);
-                        hasNegative = 1;
+                        hasNegative = true;
                     }
                 }                
             }
@@ -247,7 +246,7 @@ function* parseFunction(
 
                     addToFunctionList(getHead(func), functionBuilder, SUB);     
                     //printf("new part!\n");
-                    hasOperation = 1;
+                    hasOperation = true;
                 }
 
                 // If within parenthesis, append to function to handle 
@@ -255,10 +254,10 @@ function* parseFunction(
                 else
                     appendStr(functionBuilder, &c, 1);
 
-                hasNegative = 0;
-                hasDecimal = 0;
-                hasExponent = 0;
-                hasVariable = 0;
+                hasNegative = false;
+                hasDecimal = false;
+                hasExponent = false;
+                hasVariable = false;
             }
         }
 
@@ -290,10 +289,10 @@ function* parseFunction(
                 else 
                 {
                     appendStr(functionBuilder, &theFunction[i], 1);
-                    hasExponent = 1;
-                    hasNegative = 0;
-                    hasDecimal = 0;
-                    hasVariable = 0;
+                    hasExponent = true;
+                    hasNegative = false;
+                    hasDecimal = false;
+                    hasVariable = false;
                 }
 
             // If exponent sign already exists, throw exception
@@ -343,11 +342,11 @@ function* parseFunction(
 
             // Clears negative, decimal, and exponent 
             // for next value after operation 
-            hasOperation = 1;
-            hasNegative = 0;
-            hasDecimal = 0;
-            hasExponent = 0;
-            hasVariable = 0;
+            hasOperation = true;
+            hasNegative = false;
+            hasDecimal = false;
+            hasExponent = false;
+            hasVariable = false;
         }
 
         /* OPENING PARENTHESIS, NEEDS OVERHAUL */     
@@ -413,10 +412,10 @@ function* parseFunction(
                                               functionBuilder, 
                                               tempOp); 
 
-                            hasNegative = 0;
-                            hasDecimal = 0;
-                            hasExponent = 0;
-                            hasVariable = 0;
+                            hasNegative = false;
+                            hasDecimal = false;
+                            hasExponent = false;
+                            hasVariable = false;
                             break;
                         }  
                     }    
@@ -424,8 +423,8 @@ function* parseFunction(
             } else
                 appendStr(functionBuilder, &c, 1);
 
-            isFunction = 0;
-            isParenthesis = 0;            
+            isFunction = false;
+            isParenthesis = false;           
         }
  
         // Every close parenthesis should be handled 

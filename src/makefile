@@ -21,7 +21,7 @@ test.o: test.c
 Function.o: Function.c Function.h
 	$(CC) -c Function.c
 
-StringExtensions.o: StringExtensions.c StringExtensions.h
+StringExtensions.o: StringExtensions.c StringExtensions.h Boolean.h
 	$(CC) -c StringExtensions.c
 
 Parse.o: Parse.c Parse.h
