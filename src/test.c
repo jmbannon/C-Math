@@ -15,7 +15,7 @@
 
 int main(void) 
 {
-    char* test = "z+.354x^-5+(74)^(43x)45sin(59x)+(45)";
+    char* test = "z4+.354x^-5+(74)^(43x)45sin(59x)+(45)";
     function* theFunc = parseFunction(test);
     printInfo(theFunc);
     return 0;

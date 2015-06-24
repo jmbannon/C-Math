@@ -33,8 +33,20 @@
 #include "StringExtensions.h"
 #include "Boolean.h"
 
-static char * file = "Parse.c";
-static char error_buffer[1024];
+static char * file_name = "Parse.c";
+static char error_loc_buffer[1024];
+
+/* Function prototypes */
+void print_parse_error(
+        const char * description,
+        const char * function,
+        int index
+);
+
+char * err_loc_msg(
+        const char * function,
+        int index
+);
 
 /** Parses the given function from a string into a sequential linked list of
   * FunctionParts with operators inbetween.  
@@ -72,14 +84,13 @@ function * parseFunction(
         /* NUMBERS */
         if (isdigit(c)) 
         {
-
             if (hasVariable) 
             {
-                sprintf(error_buffer, "Function: %s Index: %d", theFunction, i);
-                print_error(file, "parse_function", error_buffer); 
+                print_parse_error(
+                    "Cannot have digit immediately after variable without operation",
+                    theFunction, i); 
                 return NULL;
             }
-
             else
                 appendChar(functionBuilder, c);       
 
@@ -112,11 +123,9 @@ function * parseFunction(
             // Variable parse errors 
             else if (theFunction[i-1] == '.') 
             {
-                printf(
-                "* ERROR [parseFunction]:\n"
-                "* Invalid variable. Cannot proceed non-numeric symbols.\n"
-                "* Fix later for variable multiplication\n"
-                "*   Function: %s\n*   Index: %d\n", theFunction, i);
+                print_parse_error(
+                    "Invalid variable. Cannot proceed non-numeric symbol '.'",
+                    theFunction, i); 
                 return NULL;
             }
             
@@ -151,11 +160,9 @@ function * parseFunction(
                  // If letter precedes decimal, throw error. 
                  if (hasVariable) 
                  {
-                     printf(
-                     "* ERROR [parseFunction]:\n"
-                     "* A decimal point cannot proceed a variable.\n"
-                     "*   Function: %s\n*   Index: %d\n", theFunction, i);
-                     
+                     print_parse_error(
+                        "A decimal point cannot proceed a variable.",
+                        theFunction, i); 
                      return NULL;
                  }
 
@@ -167,13 +174,11 @@ function * parseFunction(
                  appendStr(functionBuilder, &c, 1);
                  hasDecimal = true;
             }
-
             else 
             {
-                printf(
-                "* ERROR [parseFunction]:\n"
-                "* Numeric already contains a decimal.\n"
-                "*   Function: %s\n*   Index: %d\n", theFunction, i);
+                print_parse_error(
+                    "Numeric already contains a decimal.",
+                    theFunction, i); 
                 return NULL;
             }
         }
@@ -200,17 +205,16 @@ function * parseFunction(
                     hasVariable = false;
 
                 // Otherwise append to function
-                } else 
+                } 
+                else 
                 {
-                    if (i != 0 && theFunction[i-1] == '.') {
-                        printf(
-                        "* ERROR [parseFunction]:\n"
-                        "* Cannot subtract a decimal.\n"
-                        "*   Function: %s\n*   Index: %d\n", theFunction, i);
-                        
+                    if (i != 0 && theFunction[i-1] == '.')
+                    {
+                        print_parse_error(
+                            "Cannot subtract a decimal.",
+                            theFunction, i); 
                         return NULL;
                     }
-
                     else 
                     {
                         appendStr(functionBuilder, &c, 1);
@@ -222,17 +226,15 @@ function * parseFunction(
             // If negative sign is present
             else 
             {
-
                 // If function already contains a negative and not in 
                 // parenthesis string, throw exception 
                 if (strcmp(functionBuilder, "-") == 0 
                         && !isParenthesis 
                         && !isFunction) 
                 {
-                    printf(
-                    "* ERROR [parseFunction]:\n"
-                    "* A subtraction operation already exists.\n"
-                    "*   Function: %s\n*   Index: %d\n", theFunction, i);
+                    print_parse_error(
+                        "A subtraction operation already exists.",
+                        theFunction, i); 
                     return NULL;
                 }
 
@@ -242,10 +244,9 @@ function * parseFunction(
                 {
                     if (hasOperation) 
                     {
-                        printf(
-                        "* ERROR [parseFunction]:\n"
-                        "* A subtraction operator already exists.\n"
-                        "*   Function: %s\n*   Index: %d\n", theFunction, i);
+                        print_parse_error(
+                            "A subtraction operator already exists",
+                            theFunction, i);
                         
                         return NULL;
                     }
@@ -282,10 +283,9 @@ function * parseFunction(
                            && !isalpha(theFunction[i-1]) 
                            && theFunction[i-1] != ')')) 
                 {
-                    printf(
-                    "* ERROR [parseFunction]:\n"
-                    "* Must proceed a number, variable, or parenthesis.\n"
-                    "*   Function: %s\n*   Index: %d\n", theFunction, i);
+                    print_parse_error(
+                        "Must proceed a number, variable, or parenthesis.",
+                        theFunction, i);
 
                     return NULL;
                 }
@@ -304,10 +304,9 @@ function * parseFunction(
             // If exponent sign already exists, throw exception
             } else 
             {
-                printf(
-                "* ERROR [parseFunction]:\n"
-                "* Function already contains an exponent.\n"
-                "*   Function: %s\n*   Index: %d\n", theFunction, i);
+                print_parse_error(
+                    "Function already contains an exponent.",
+                    theFunction, i);
                 
                 return NULL;
             }
@@ -318,10 +317,9 @@ function * parseFunction(
         {    
             if (i == 0 || hasOperation) 
             {
-                printf(
-                "* ERROR [parseFunction]:\n"
-                "* Must proceed a number, variable, or parenthesis.\n"
-                "*   Function: %s\n*   Index: %d\n", theFunction, i);
+                print_parse_error(
+                    "Must proceed a number, variable, or parenthesis.",
+                    theFunction, i);
 
                 return NULL;
             }
@@ -437,11 +435,9 @@ function * parseFunction(
         // in opening parenthesis parse
         else if (c == ')')                                                 
         {       
-            printf(
-            "* ERROR [parseFunction]:\n"
-            "* Does not have an opening parenthesis.\n"
-            "*   Function: %s\n*   Index: %d\n", theFunction,i);
-          
+            print_parse_error(
+                "Does not have an opening parenthesis.",
+                theFunction, i);
             return NULL;
         }
 
@@ -460,19 +456,17 @@ function * parseFunction(
 
     if (hasOperation)
     {
-        printf(
-        "* ERROR [parseFunction]:\n"
-        "* Last operator does not operate on anything.\n"
-        "*   Function: %s\n*   Index: end of function\n", theFunction);
+        print_parse_error(
+            "Last operator does not operate on anything.\n",
+            theFunction, -1);
         return NULL;
     }
 
     if (parenthesisBalance != 0)
     {
-        printf(
-        "* ERROR [parseFunction]:\n"
-        "* Parenthesis do not balance.\n"
-        "*   Function: %s\n*   Index: end of function\n", theFunction);
+        print_parse_error(
+        "Parenthesis do not balance.",
+        theFunction, -1);
         return NULL;
     }
 
@@ -492,3 +486,30 @@ functionPart* parseFunctionPart(
     return *funcPart;
 }
 
+void print_parse_error(
+        const char * description,
+        const char * function,
+        int index
+) {
+    parse_error(
+        file_name,
+        "parse_function",
+        description,
+        err_loc_msg(function, index)); 
+}
+
+/* Returns the string of the current function and the index the error
+ * was thrown.
+ */ 
+char * err_loc_msg(
+        const char * function,
+        int index
+) {
+    if (index >= 0)
+        sprintf(error_loc_buffer, 
+            "Function: %s : Index: %d", function, index);
+    else
+        sprintf(error_loc_buffer, 
+            "  Function: %s : Index: end of function", function); 
+    return error_loc_buffer;
+}

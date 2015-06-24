@@ -1,8 +1,11 @@
 #ifndef ERRORMESSAGE_H_
 #define ERRORMESSAGE_H_
 
-void print_error(char * file,
-                 char * function,
-                 char * message);
+void parse_error(
+		const char * file,
+     	const char * function,
+        const char * description,
+        const char * function_location
+);
 
 #endif

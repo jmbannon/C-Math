@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void print_error(const char * file,
+void parse_error(const char * file,
                  const char * function,
-                 const char * message
+                 const char * description,
+                 const char * function_location
 ) {
-    printf("ERROR ------- \n");
-    printf("[%s] [%s]\n", file, function);
-    printf("%s\n", message);
+    printf(" * PARSING ERROR *\n");
+    printf(" * File: %s : Function: %s\n", file, function);
+    printf(" * %s\n", description);
+    printf(" * %s\n", function_location);
 }
