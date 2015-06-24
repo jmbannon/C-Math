@@ -29,8 +29,12 @@
 #include <ctype.h>
 #include "Parse.h"
 #include "Function.h"
+#include "ErrorMessage.h"
 #include "StringExtensions.h"
 #include "Boolean.h"
+
+static char * file = "Parse.c";
+static char error_buffer[1024];
 
 function* parseFunction(
         const char* theFunction
@@ -68,11 +72,8 @@ function* parseFunction(
 
             if (hasVariable) 
             {
-                printf(
-                "* ERROR [parseFunction]:\n"
-                "* A number cannot proceed a letter\n"
-                "*   Function: %s\n*   Index: %d\n", theFunction, i);
-
+                sprintf(error_buffer, "Function: %s Index: %d", theFunction, i);
+                print_error(file, "parse_function", error_buffer); 
                 return NULL;
             }
 
