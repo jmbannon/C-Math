@@ -57,7 +57,8 @@ typedef struct logarithm
  =======================================================================
 */
 
-enum operations {
+enum operations
+{
         NOOP, 
         ADD, 
         SUB, 
@@ -65,7 +66,8 @@ enum operations {
         DIV
 };
 
-enum trigFunctions {
+enum trigFunctions
+{
         NOTRIG, 
         SIN, 
         COS, 
@@ -75,7 +77,8 @@ enum trigFunctions {
         COT
 };
 
-enum partType {
+enum partType
+{
         NOPART, 
         PARENTHESIS,
         NUM, 
@@ -92,26 +95,31 @@ enum partType {
 */
 
 void initializeFunction(
-        function** func,
-        const char* theFunction
+        function ** func,
+        const char * theFunction
 );
 
 functionPart** getHead(
-        function* theFunction
+        function * theFunction
 );
 
 void printInfo(
-        function* theFunction
+        function * theFunction
 );
 
 trigType isTrigFunction(
-        const char* firstLetter
+        const char * firstLetter
 );
 
 void addToFunctionList(
-        functionPart** head, 
-        char* functionBuilder,
+        functionPart ** head, 
+        char * functionBuilder,
         const opType operation
+);
+
+void addToVariableList(
+    function * theFunction,
+    char variable
 );
 
 #endif

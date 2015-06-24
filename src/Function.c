@@ -12,9 +12,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "Function.h"
+#include "Boolean.h"
 #include "Parse.h"
 
-#define bool unsigned char
+static int VAR_LIST_SIZE = 64;
 
 /* 
  =======================================================================
@@ -24,23 +25,11 @@
  =======================================================================
 */
 
-struct variable 
-{
-    char variable;
-    int prime;
-};
-
-struct variableList 
-{
-    var var;
-    var* next;
-};
-
 struct function 
 {
-    char* str;
-    functionPart* head;
-    varList variables;
+    char * str;
+    char * variableList;
+    functionPart * head;
 };
 
 struct numeric 
@@ -51,35 +40,35 @@ struct numeric
 struct trigonometry 
 {
     trigType trigType;
-    functionPart* contents;
+    functionPart * contents;
 };
 
 struct logarithm 
 {
     double base;
-    functionPart* contents;
+    functionPart * contents;
 };
 
 struct function_part 
 {
-    char* str;
+    char * str;
     union part_union 
     {
         functionPart* parenthesis;
-        num* num;
-        trig* trig;
-        log* log;
+        num * num;
+        trig * trig;
+        log * log;
     } part;
     
     union part_exponent 
     {
-        num* num;
-        functionPart* parenthesis;
+        num * num;
+        functionPart * parenthesis;
     } exponent;
 
     opType operation;
-    functionPart* prev;
-    functionPart* next;
+    functionPart * prev;
+    functionPart * next;
 };
 
 /* 
@@ -106,7 +95,7 @@ void initializePart(
 
     int i;
     bool openingParenthesis = 1;
-    function* newPart;
+    function * newPart;
 
     printf("thePart = %s\n", (*thePart)->str);
     for (i = 0; i < strlen((*thePart)->str); i++) 
@@ -128,24 +117,25 @@ void initializePart(
 }
 
 void initializeFunction(
-        function** func,
-        const char* theFunction
+        function ** func,
+        const char * theFunction
 ) {
     (*func) = malloc(sizeof(function));
 
     (*func)->str = malloc(strlen(theFunction)+1);
     strcpy((*func)->str, theFunction);
     (*func)->head = NULL;
+    (*func)->variableList = calloc(VAR_LIST_SIZE, sizeof(char));
 }
 
-functionPart** getHead(
+functionPart ** getHead(
         function* theFunction
 ) {
     return &(theFunction->head);
 }
 
 void printInfo(
-        function* theFunction
+        function * theFunction
 ) {
     if (!theFunction)
         return;
@@ -154,17 +144,22 @@ void printInfo(
     functionPart* curr = theFunction->head;
 
     printf("%x\n", theFunction->head);
-
     while (curr != NULL) 
     {
         printf("Part: %s Op: %d\n", curr->str, curr->operation);
         curr = curr->next;
     }
+
+    int i = 0;
+    printf("Variables in ascending order: ");
+    while (i < VAR_LIST_SIZE && theFunction->variableList[i])
+        printf("%c ", theFunction->variableList[i++]);
+    printf("\n");
 }
 
 void addToFunctionList(
-        functionPart** head, 
-        char* functionBuilder,          
+        functionPart ** head, 
+        char * functionBuilder,          
         const opType operation
 ) {
     functionPart* thePart = malloc(sizeof(functionPart));
@@ -196,7 +191,7 @@ void addToFunctionList(
 }
 
 trigType isTrigFunction(
-        const char* firstLetter
+        const char * firstLetter
 ) {
     if (strncmp(firstLetter, "sin(", 4) == 0)
         return SIN;
@@ -218,4 +213,51 @@ trigType isTrigFunction(
          
     else
         return NOTRIG;
+}
+
+
+int needsInsert(
+        function * theFunction,
+        const char variable
+) {
+    int i;
+    for (i = 0; i < VAR_LIST_SIZE; i++)
+    {
+        if (theFunction->variableList[i] == variable)
+            return -1;
+
+        else if (theFunction->variableList[i] == '\0')
+            return i;
+    }
+    return VAR_LIST_SIZE;
+}
+
+void insertVariableToList(
+        char * variableList,
+        char variable,
+        int idx
+) {
+    if (idx == VAR_LIST_SIZE)
+        variableList = realloc(variableList, VAR_LIST_SIZE*=2);
+
+    variableList[idx] = variable;
+    while (idx != 0 && variableList[idx-1] > variableList[idx])
+    {
+        variable = variableList[idx-1];
+        variableList[idx-1] = variableList[idx];
+        variableList[idx--] = variable;
+    }
+}
+
+void addToVariableList(
+    function * theFunction,
+    char variable
+) {
+    int insertIdx = needsInsert(theFunction, variable);
+    if (insertIdx < 0)
+        return;
+    else 
+        insertVariableToList(theFunction->variableList,
+                             variable,
+                             insertIdx);
 }

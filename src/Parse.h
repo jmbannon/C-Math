@@ -12,8 +12,8 @@
 #define PARSE_H_
 #include "Function.h"
 
-function* parseFunction(
-        const char* theFunction
+function * parseFunction(
+        const char * theFunction
 );
 
 #endif

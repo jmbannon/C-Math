@@ -36,11 +36,14 @@
 static char * file = "Parse.c";
 static char error_buffer[1024];
 
-function* parseFunction(
+/** Parses the given function from a string into a sequential linked list of
+  * FunctionParts with operators inbetween.  
+  * WIP
+  */
+function * parseFunction(
         const char* theFunction
 ) {
     int i; /* iterator */
-
     int parenthesisBalance = 0;
 
     bool hasOperation = false;
@@ -56,7 +59,7 @@ function* parseFunction(
 
     opType tempOp;
     
-    function* func;
+    function * func;
     initializeFunction(&func, theFunction);
 
     char functionBuilder[1024] = {0};
@@ -116,7 +119,8 @@ function* parseFunction(
                 "*   Function: %s\n*   Index: %d\n", theFunction, i);
                 return NULL;
             }
-
+            
+            // Append and deal with later if it's in parenthesis or function
             else if (isParenthesis || isFunction)
                 appendStr(functionBuilder, &c, 1);
 
@@ -130,6 +134,7 @@ function* parseFunction(
                  }
                      
                  appendStr(functionBuilder, &c, 1);
+                 addToVariableList(func, c);
                  hasVariable = true;
             }
 
