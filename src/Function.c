@@ -51,10 +51,11 @@ struct logarithm
 
 struct function_part 
 {
+    function * func;
     char * str;
     union part_union 
     {
-        functionPart* parenthesis;
+        functionPart * parenthesis;
         num * num;
         trig * trig;
         log * log;
@@ -89,18 +90,21 @@ struct function_part
  =======================================================================
 */
 
+/* Determines the part_union for the given functionPart.
+ * Creates the part based on parsing the first char within its string
+ */
 void initializePart(
-        functionPart** thePart
+        functionPart * thePart
 ) {
 
     int i;
     bool openingParenthesis = 1;
     function * newPart;
 
-    printf("thePart = %s\n", (*thePart)->str);
-    for (i = 0; i < strlen((*thePart)->str); i++) 
+    printf("thePart = %s\n", thePart->str);
+    for (i = 0; i < strlen(thePart->str); i++) 
     {
-        if ((*thePart)->str[i] == '(')
+        if (thePart->str[i] == '(')
         {
             
             //Do stuff
@@ -116,24 +120,30 @@ void initializePart(
 
 }
 
-void initializeFunction(
-        function ** func,
+/* Initializes a function type with the given function string.
+ */
+function * initializeFunction(
         const char * theFunction
 ) {
-    (*func) = malloc(sizeof(function));
+    function * func = malloc(sizeof(function));
 
-    (*func)->str = malloc(strlen(theFunction)+1);
-    strcpy((*func)->str, theFunction);
-    (*func)->head = NULL;
-    (*func)->variableList = calloc(VAR_LIST_SIZE, sizeof(char));
+    func->str = malloc(strlen(theFunction)+1);
+    strcpy(func->str, theFunction);
+    func->head = NULL;
+    func->variableList = calloc(VAR_LIST_SIZE, sizeof(char));
+    return func;
 }
 
-functionPart ** getHead(
-        function* theFunction
+/* Returns the head of a function's linked list of functionParts
+ */
+functionPart * getHead(
+        function * theFunction
 ) {
-    return &(theFunction->head);
+    return theFunction->head;
 }
 
+/* Prints debugging info of the given function.
+ */
 void printInfo(
         function * theFunction
 ) {
@@ -157,17 +167,23 @@ void printInfo(
     printf("\n");
 }
 
+/* Adds a valid piece of a function string to the function type's linked
+ * list of functionParts with the given operation.  Then clears the function
+ * builder for input of another functionPart if it exists.
+ */
 void addToFunctionList(
-        functionPart ** head, 
+        function * func,
         char * functionBuilder,          
         const opType operation
 ) {
-    functionPart* thePart = malloc(sizeof(functionPart));
-    functionPart* currTemp = *head;
+    functionPart * thePart = malloc(sizeof(functionPart));
+    functionPart * head = getHead(func);
+    functionPart * currTemp = head;
 
+    thePart->func = func;
     thePart->str = malloc(strlen(functionBuilder) + 1);
     strcpy(thePart->str, functionBuilder);
-    initializePart(&thePart);
+    initializePart(thePart);
 
     functionBuilder[0] = '\0';
 
@@ -177,7 +193,7 @@ void addToFunctionList(
     {
         thePart->next = currTemp;
         thePart->prev = NULL;
-        *head = thePart;
+        head = thePart;
         return;
     }
     while (currTemp != NULL && currTemp->next != NULL)
@@ -190,6 +206,9 @@ void addToFunctionList(
     thePart->next = NULL;
 }
 
+/* Returns a trigType enum if one exists for the beginning letter of a
+ * string.
+ */
 trigType isTrigFunction(
         const char * firstLetter
 ) {
@@ -215,8 +234,11 @@ trigType isTrigFunction(
         return NOTRIG;
 }
 
-
-int needsInsert(
+/* Returns the index a variable should be inserted into to traverse a
+ * variable array. Returns -1 if it exists within the function's variable
+ * array.
+ */
+int needs_var_insert(
         function * theFunction,
         const char variable
 ) {
@@ -232,6 +254,9 @@ int needsInsert(
     return VAR_LIST_SIZE;
 }
 
+/* Inserts a variable into a given variable ordered-list by starting it
+ * at the end of the array and bubble up until it is in ascending order.
+ */
 void insertVariableToList(
         char * variableList,
         char variable,
@@ -249,11 +274,13 @@ void insertVariableToList(
     }
 }
 
+/* Inserts a variable into the function's variable array if it does not exist.
+ */
 void addToVariableList(
     function * theFunction,
     char variable
 ) {
-    int insertIdx = needsInsert(theFunction, variable);
+    int insertIdx = needs_var_insert(theFunction, variable);
     if (insertIdx < 0)
         return;
     else 

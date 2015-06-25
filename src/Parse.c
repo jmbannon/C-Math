@@ -53,7 +53,7 @@ char * err_loc_msg(
   * WIP
   */
 function * parseFunction(
-        const char* theFunction
+        const char * theFunction
 ) {
     int i; /* iterator */
     int parenthesisBalance = 0;
@@ -71,8 +71,7 @@ function * parseFunction(
 
     opType tempOp;
     
-    function * func;
-    initializeFunction(&func, theFunction);
+    function * func = initializeFunction(theFunction);
 
     char functionBuilder[1024] = {0};
     char c, tempChar;
@@ -109,7 +108,7 @@ function * parseFunction(
 
                 if (!hasOperation)
                 {
-                     addToFunctionList(getHead(func), functionBuilder, MUL);
+                     addToFunctionList(func, functionBuilder, MUL);
                      //printf("New part!\n");
                 }
 
@@ -138,12 +137,11 @@ function * parseFunction(
             {
                  if (functionBuilder[0] != '\0')
                  {
-                     addToFunctionList(getHead(func), functionBuilder, MUL);
+                     addToFunctionList(func, functionBuilder, MUL);
                      //printf("New Part!\n");
                  }
                      
                  appendStr(functionBuilder, &c, 1);
-                 addToVariableList(func, c);
                  hasVariable = true;
             }
 
@@ -196,7 +194,7 @@ function * parseFunction(
                        && !hasOperation
                        && !hasExponent) 
                 {
-                    addToFunctionList(getHead(func), functionBuilder, SUB);
+                    addToFunctionList(func, functionBuilder, SUB);
                     //printf("new part!\n");
                     hasOperation = true;
                     hasNegative = false;
@@ -251,7 +249,7 @@ function * parseFunction(
                         return NULL;
                     }
 
-                    addToFunctionList(getHead(func), functionBuilder, SUB);     
+                    addToFunctionList(func, functionBuilder, SUB);     
                     //printf("new part!\n");
                     hasOperation = true;
                 }
@@ -272,7 +270,6 @@ function * parseFunction(
         else if (c == '^')                                                
         {           
             parseExponent:  
-                                                                       
             if (!hasExponent) 
             {
             
@@ -336,7 +333,7 @@ function * parseFunction(
                 default: tempOp = NOOP;
                 }
 
-                addToFunctionList(getHead(func), functionBuilder, tempOp);
+                addToFunctionList(func, functionBuilder, tempOp);
                 //printf("new part!\n");
             }
 
@@ -369,7 +366,7 @@ function * parseFunction(
                 printf("%d %d %d\n", hasOperation, isFunction, hasExponent);
                 if (!hasOperation && !isFunction && !hasExponent 
                         && strlen(functionBuilder) != 0) 
-                    addToFunctionList(getHead(func), functionBuilder, MUL);
+                    addToFunctionList(func, functionBuilder, MUL);
 
                 // Always appends opening parenthesis to 
                 // appear in functionPart string
@@ -384,7 +381,8 @@ function * parseFunction(
                     else if (theFunction[i] == '(') {
                         ++parenthesisBalance;
                         appendStr(functionBuilder, &theFunction[i], 1);
-                    } else 
+                    } 
+                    else 
                     {
                         --parenthesisBalance;
                         appendStr(functionBuilder, &theFunction[i], 1);
@@ -393,26 +391,27 @@ function * parseFunction(
                         {
                             switch(theFunction[i+1]) 
                             {
-                            case '+': tempOp = ADD; ++i; hasOperation = 1;
+                            case '+': tempOp = ADD; ++i; hasOperation = true;
                                 break; 
                             
-                            case '-': tempOp = SUB; ++i; hasOperation = 1;
+                            case '-': tempOp = SUB; ++i; hasOperation = true;
                                 break; 
 
-                            case '/': tempOp = DIV; ++i; hasOperation = 1;
+                            case '/': tempOp = DIV; ++i; hasOperation = true;
                                 break;
 
-                            case '\0': tempOp = NOOP; hasOperation = 0;
+                            case '\0': tempOp = NOOP; hasOperation = false;
                                 break;
 
-                            case '^':  isParenthesis = 0; isFunction = 0; 
+                            case '^':  isParenthesis = false; 
+                                       isFunction = false; 
                                        ++i; goto parseExponent;
 
                             default: tempOp = MUL; hasOperation = 1;
                                 break; 
                             }
                             printf("the function builder = %s\n", functionBuilder);
-                            addToFunctionList(getHead(func), 
+                            addToFunctionList(func, 
                                               functionBuilder, 
                                               tempOp); 
 
@@ -450,7 +449,7 @@ function * parseFunction(
     // Append last function part
 
     if (functionBuilder[0] != '\0')
-        addToFunctionList(getHead(func), 
+        addToFunctionList(func, 
                           functionBuilder, 
                           NOOP); 
 
@@ -474,16 +473,16 @@ function * parseFunction(
     return func;
 }
 
-functionPart* parseFunctionPart(
-        const char* functionStr
+functionPart * parseFunctionPart(
+        const char * functionStr
 ) {
-    functionPart** funcPart;
+    functionPart * funcPart;
     
-    function* func = parseFunction(functionStr);
+    function * func = parseFunction(functionStr);
     funcPart = getHead(func);
     
     free(func);
-    return *funcPart;
+    return funcPart;
 }
 
 void print_parse_error(

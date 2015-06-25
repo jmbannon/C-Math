@@ -94,12 +94,11 @@ enum partType
  =======================================================================
 */
 
-void initializeFunction(
-        function ** func,
+function * initializeFunction(
         const char * theFunction
 );
 
-functionPart** getHead(
+functionPart * getHead(
         function * theFunction
 );
 
@@ -112,7 +111,7 @@ trigType isTrigFunction(
 );
 
 void addToFunctionList(
-        functionPart ** head, 
+        function * func, 
         char * functionBuilder,
         const opType operation
 );
