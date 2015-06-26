@@ -81,7 +81,9 @@ struct function_part
  =======================================================================
 */
 
-//TODO
+functionPart * parse_parenthesis_part(
+        char * par_str
+);
 
 /* 
  =======================================================================
@@ -104,10 +106,35 @@ void initializePart(
     printf("thePart = %s\n", thePart->str);
     if (thePart->str[i] == '(')
     {
-        while (thePart->str[i] == '(' && thePart->str[len-1-i] == ')') ++i;
-        thePart->part.parenthesis = parseFunctionPart(substring(thePart->str, i, len-1-i));
+        thePart->part.parenthesis = parse_parenthesis_part(thePart->str);
+    }
+
+    while (i < len && thePart->str[i] != '^') ++i;
+    if (thePart->str[i] == '^')
+    {
+        if (thePart->str[i+1] == '(')
+            thePart->exponent.parenthesis = parse_parenthesis_part(&thePart->str[i+1]);
     }
 }
+
+/* Parses the given parenthesis string and returns its functionPart.
+ * par_str is expected to be passed in at the index of the opening parenthesis.
+ */
+functionPart * parse_parenthesis_part(
+        char * par_str
+) {
+    int i = 1, par_bal = 1, len = strlen(par_str);
+    while (i < len-1 && par_bal != 0)
+    {
+        if (par_str[i+1] == '(') ++par_bal;
+        else if (par_str[i+1] == ')') --par_bal;
+        
+        if (par_bal != 0) ++i;
+    }
+    if (par_bal != 0) printf("mass error dude");
+    return parseFunctionPart(substring(par_str, 1, i));
+}
+
 
 /* Initializes a function type with the given function string.
  */
