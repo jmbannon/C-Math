@@ -11,6 +11,12 @@
 #ifndef STRINGEXTENSIONS_H_
 #define STRINGEXTENSIONS_H_
 
+char * substring(
+        char * string,
+        const int beg_idx,
+        const int end_idx
+);
+
 void appendChar(
         char* string, 
         const char c

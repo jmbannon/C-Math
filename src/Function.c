@@ -14,6 +14,7 @@
 #include "Function.h"
 #include "Boolean.h"
 #include "Parse.h"
+#include "StringExtensions.h"
 
 static int VAR_LIST_SIZE = 64;
 
@@ -97,27 +98,15 @@ void initializePart(
         functionPart * thePart
 ) {
 
-    int i;
-    bool openingParenthesis = 1;
+    int i = 0, len = strlen(thePart->str);
     function * newPart;
 
     printf("thePart = %s\n", thePart->str);
-    for (i = 0; i < strlen(thePart->str); i++) 
+    if (thePart->str[i] == '(')
     {
-        if (thePart->str[i] == '(')
-        {
-            
-            //Do stuff
-        } else 
-        {
-            if (openingParenthesis && i != 0)
-                 //newPart = parseFunction(removeEnds((*thePart)->str, i));
-            
-            openingParenthesis = 0;
-        }
+        while (thePart->str[i] == '(' && thePart->str[len-1-i] == ')') ++i;
+        thePart->part.parenthesis = parseFunctionPart(substring(thePart->str, i, len-1-i));
     }
-    //printInfo(newPart);
-
 }
 
 /* Initializes a function type with the given function string.

@@ -13,12 +13,30 @@
 #include <string.h>
 #include <ctype.h>
 
-char* removeEnds(
+char * substring(
+        char * string,
+        const int beg_idx,
+        const int end_idx
+) {
+    if (beg_idx < 0 || end_idx >= strlen(string))
+        return NULL;
+
+    int i, j = 0, size = end_idx - beg_idx + 1;
+    char * substring = malloc(size);
+    for (i = beg_idx; i <= end_idx; i++)
+    {
+        substring[j++] = string[i];
+    }
+    substring[j] = '\0';
+    return substring;
+}
+
+char * removeEnds(
         char* functionPart_str,
         const size_t amount
 ) {
     size_t len = strlen(functionPart_str);
-    char* endRemoved = malloc(len-(2*amount)+1);
+    char * endRemoved = malloc(len-(2*amount)+1);
 
     strncpy(endRemoved, functionPart_str+amount, len-(2*amount));
     endRemoved[len-(2*amount)] = '\0';

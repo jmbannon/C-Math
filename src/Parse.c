@@ -299,7 +299,8 @@ function * parseFunction(
                 }
 
             // If exponent sign already exists, throw exception
-            } else 
+            }
+            else 
             {
                 print_parse_error(
                     "Function already contains an exponent.",
@@ -464,8 +465,8 @@ function * parseFunction(
     if (parenthesisBalance != 0)
     {
         print_parse_error(
-        "Parenthesis do not balance.",
-        theFunction, -1);
+            "Parenthesis do not balance.",
+            theFunction, -1);
         return NULL;
     }
 
