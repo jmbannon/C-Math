@@ -53,25 +53,27 @@ char * err_loc_msg(
   * WIP
   */
 function * parseFunction(
-        const char * theFunction
+        const char * theFunction,
+        var * root_var_list
 ) {
     int i; /* iterator */
     int parenthesisBalance = 0;
 
-    bool hasOperation = false;
-    bool hasNegative = false;
-    bool hasNumber = false;
-    bool hasPrime = false;
-    bool hasDecimal = false;
-    bool hasExponent = false;
-    bool hasVariable = false;
- 
+    bool hasOperation  = false;
+    bool hasNegative   = false;
+    bool hasNumber     = false;
+    bool hasPrime      = false;
+    bool hasDecimal    = false;
+    bool hasExponent   = false;
+    bool hasVariable   = false;
     bool isParenthesis = false;
-    bool isFunction = false;
+    bool isFunction    = false;
 
     opType tempOp;
     
     function * func = initializeFunction(theFunction);
+    if (root_var_list != NULL)
+        set_var_list(func, root_var_list);
 
     char functionBuilder[1024] = {0};
     char c, tempChar;
@@ -475,11 +477,12 @@ function * parseFunction(
 }
 
 functionPart * parseFunctionPart(
-        const char * functionStr
+        const char * functionStr,
+        var * root_var_list
 ) {
     functionPart * funcPart;
     
-    function * func = parseFunction(functionStr);
+    function * func = parseFunction(functionStr, root_var_list);
     funcPart = getHead(func);
     
     free(func);

@@ -28,17 +28,17 @@ typedef enum trigFunctions
 typedef struct function 
         function;
 
+typedef union base_union
+        base;
+
+typedef union exponent_union
+        exponent;
+
 typedef struct function_part 
         functionPart;
 
-typedef struct function_part_base 
-        base;
-
 typedef struct variable 
         var;
-
-typedef struct variableList 
-        varList;
 
 typedef struct numeric 
         num;
@@ -100,6 +100,15 @@ function * initializeFunction(
 
 functionPart * getHead(
         function * theFunction
+);
+
+var * get_var_list(
+        function * func
+);
+
+void set_var_list(
+         function * func,
+         var * var_list
 );
 
 void printInfo(

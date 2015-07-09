@@ -13,7 +13,13 @@
 #include "Function.h"
 
 function * parseFunction(
-        const char * theFunction
+        const char * theFunction,
+        var * root_var_list
+);
+
+functionPart * parseFunctionPart(
+        const char * functionStr,
+        var * root_var_list
 );
 
 #endif
