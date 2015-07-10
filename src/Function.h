@@ -19,11 +19,11 @@
  =======================================================================
 */
 
-typedef enum operations 
-        opType;
+typedef enum part_type_
+        part_type;
 
-typedef enum trigFunctions 
-        trigType;
+typedef enum operations_
+        op_type;
 
 typedef struct function 
         function;
@@ -57,7 +57,7 @@ typedef struct logarithm
  =======================================================================
 */
 
-enum operations
+enum operations_
 {
         NOOP, 
         ADD, 
@@ -66,24 +66,20 @@ enum operations
         DIV
 };
 
-enum trigFunctions
-{
-        NOTRIG, 
-        SIN, 
-        COS, 
-        TAN, 
-        SEC, 
-        CSC, 
-        COT
-};
-
-enum partType
+enum part_type_
 {
         NOPART, 
-        PARENTHESIS,
+        PAR,
+        VAR,
         NUM, 
-        TRIG, 
-        LOG
+        LOG,
+
+        SIN,
+        COS,
+        TAN,
+        SEC,
+        CSC,
+        COT
 };
 
 /* 
@@ -115,14 +111,15 @@ void printInfo(
         function * theFunction
 );
 
-trigType isTrigFunction(
+part_type isTrigFunction(
         const char * firstLetter
 );
 
 void addToFunctionList(
         function * func, 
         char * functionBuilder,
-        const opType operation
+        const part_type type,
+        const op_type operation
 );
 
 void addToVariableList(

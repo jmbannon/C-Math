@@ -61,7 +61,7 @@ union exponent_union
 
 struct trigonometry 
 {
-    trigType trigType;
+    part_type trig_type;
     functionPart * contents;
 };
 
@@ -77,7 +77,7 @@ struct function_part
     char * str;
     base part;
     exponent exponent;
-    opType operation;
+    op_type operation;
     functionPart * prev;
     functionPart * next;
 };
@@ -108,6 +108,7 @@ functionPart * parse_parenthesis_part(
  */
 void initializePart(
         functionPart * thePart,
+        const part_type type,
         var * root_var_list
 ) {
 
@@ -216,8 +217,9 @@ void printInfo(
  */
 void addToFunctionList(
         function * func,
-        char * functionBuilder, 
-        const opType operation
+        char * functionBuilder,
+        const part_type type, 
+        const op_type operation
 ) {
     functionPart * thePart = malloc(sizeof(functionPart));
     functionPart * head = getHead(func);
@@ -226,7 +228,7 @@ void addToFunctionList(
     thePart->func = func;
     thePart->str = malloc(strlen(functionBuilder) + 1);
     strcpy(thePart->str, functionBuilder);
-    initializePart(thePart, func->variableList);
+    initializePart(thePart, type, func->variableList);
 
     functionBuilder[0] = '\0';
 
@@ -252,7 +254,7 @@ void addToFunctionList(
 /* Returns a trigType enum if one exists for the beginning letter of a
  * string.
  */
-trigType isTrigFunction(
+part_type isTrigFunction(
         const char * firstLetter
 ) {
     if (strncmp(firstLetter, "sin(", 4) == 0)
@@ -272,9 +274,8 @@ trigType isTrigFunction(
 
     else if (strncmp(firstLetter, "cot(", 4) == 0)
         return COT;
-         
     else
-        return NOTRIG;
+        return NOPART;
 }
 
 /* Returns the index a variable should be inserted into to traverse a
