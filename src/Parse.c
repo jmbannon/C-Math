@@ -61,6 +61,11 @@ char * err_loc_msg(
         int index
 );
 
+part_type get_part(
+        unsigned int P_BOOLS,
+        part_type temp_part
+);
+
 /** Parses the given function from a string into a sequential linked list of
   * FunctionParts with operators inbetween.  
   * WIP
@@ -74,7 +79,7 @@ function * parseFunction(
     unsigned int P_BOOLS = 0; /* This variable is used in bool defines */
 
     op_type   temp_op;
-    part_type temp_type;
+    part_type temp_part;
 
     function * func = initializeFunction(theFunction);
     if (root_var_list != NULL)
@@ -100,31 +105,27 @@ function * parseFunction(
             else
                 appendChar(func_builder, c);       
 
-           //has_op = false;
            SET_FALSE(HAS_OP);
         }
 
         /* LETTERS */
         else if (isalpha(c))  //should recognize log(, ln(, pi, e, L(), and !
         {
-
             // If letters proceed are a trig function, add preceding
             // function to equationList and create new function 
-            if ((temp_type = isTrigFunction(&theFunction[i]))) 
+            if ((temp_part = isTrigFunction(&theFunction[i]))) 
             {
                 SET_TRUE(IS_TRIG);
 
                 if (!CHECK(HAS_OP))
                 {
-                     addToFunctionList(func, func_builder, temp_type, MUL);
-                     //printf("New part!\n");
+                     addToFunctionList(func, func_builder, get_part(P_BOOLS, temp_part), MUL);
                 }
 
                 appendStr(func_builder, &theFunction[i], 3);
                 i += 3;
 
                 goto parseParenthesis;  // line 338
-
             }
 
             // Variable parse errors 
@@ -146,7 +147,7 @@ function * parseFunction(
                  if (func_builder[0] != '\0')
                  {
                      printf("implicit var mult: %s\n", func_builder);
-                     addToFunctionList(func, func_builder, NOPART, MUL);
+                     addToFunctionList(func, func_builder, get_part(P_BOOLS, temp_part), MUL);
                      //printf("New Part!\n");
                  }
                      
@@ -204,7 +205,7 @@ function * parseFunction(
                        && !CHECK(HAS_EXP)) 
                 {
                     printf("subtraction func list: %s", func_builder);
-                    addToFunctionList(func, func_builder, NOPART, SUB); // Test to see part type
+                    addToFunctionList(func, func_builder, get_part(P_BOOLS, temp_part), SUB); // Test to see part type
                     SET_TRUE(HAS_OP);
                     SET_FALSE(HAS_NEG);
                     SET_FALSE(HAS_DEC);
@@ -258,7 +259,7 @@ function * parseFunction(
                         return NULL;
                     }
 
-                    addToFunctionList(func, func_builder, NUM, SUB);     
+                    addToFunctionList(func, func_builder, get_part(P_BOOLS, temp_part), SUB);     
                     //printf("new part!\n");
                     SET_TRUE(HAS_OP);
                 }
@@ -343,7 +344,7 @@ function * parseFunction(
                 default: temp_op = NOOP;
                 }
                 printf("operation part type: %s\n", func_builder);
-                addToFunctionList(func, func_builder, NOPART, temp_op);
+                addToFunctionList(func, func_builder, get_part(P_BOOLS, temp_part), temp_op);
                 //printf("new part!\n");
             }
 
@@ -377,7 +378,7 @@ function * parseFunction(
                         && strlen(func_builder) != 0)
                 {
                     printf("parenth mult = %s\n", func_builder);
-                    addToFunctionList(func, func_builder, NOPART, MUL);
+                    addToFunctionList(func, func_builder, get_part(P_BOOLS, temp_part), MUL);
                 }
 
                 // Always appends opening parenthesis to 
@@ -425,7 +426,7 @@ function * parseFunction(
                             printf("the function builder = %s\n", func_builder);
                             addToFunctionList(func, 
                                               func_builder,
-                                              PAR,
+                                              get_part(P_BOOLS, temp_part),
                                               temp_op); 
 
                             SET_FALSE(HAS_NEG);
@@ -466,7 +467,7 @@ function * parseFunction(
         printf("end type: %s\n", func_builder);
         addToFunctionList(func, 
                           func_builder,
-                          NOPART,
+                          get_part(P_BOOLS, temp_part),
                           NOOP); 
     }
 
@@ -513,6 +514,22 @@ void print_parse_error(
         "parse_function",
         description,
         err_loc_msg(function, index)); 
+}
+
+part_type get_part(
+        unsigned int P_BOOLS,
+        const part_type temp_part
+) {
+    if (CHECK(HAS_NUM))
+        return NUM;
+    else if (CHECK(HAS_VAR))
+        return VAR;
+    else if (CHECK(IS_TRIG))
+        return temp_part;
+    else if (CHECK(IS_PAR))
+        return PAR;
+    else
+        return NOPART;
 }
 
 /* Returns the string of the current function and the index the error
