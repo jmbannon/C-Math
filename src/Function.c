@@ -115,7 +115,6 @@ void initializePart(
     int i = 0, len = strlen(thePart->str);
     function * newPart;
 
-    printf("thePart = %s\n", thePart->str);
     if (thePart->str[i] == '(')
     {
         thePart->part.parenthesis = parse_parenthesis_part(thePart->str,
@@ -225,6 +224,8 @@ void addToFunctionList(
     functionPart * head = getHead(func);
     functionPart * currTemp = head;
 
+    printf("type = %d op = %d, thePart = %s\n", type, operation, functionBuilder);
+
     thePart->func = func;
     thePart->str = malloc(strlen(functionBuilder) + 1);
     strcpy(thePart->str, functionBuilder);
@@ -274,6 +275,16 @@ part_type isTrigFunction(
 
     else if (strncmp(firstLetter, "cot(", 4) == 0)
         return COT;
+
+    else if (strncmp(firstLetter, "sqrt(", 5) == 0)
+        return SQRT;
+
+    else if (strncmp(firstLetter, "log(", 4) == 0)
+        return LOG;
+
+    else if (strncmp(firstLetter, "ln(", 3) == 0)
+        return LN;
+
     else
         return NOPART;
 }

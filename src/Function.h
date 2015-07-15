@@ -59,11 +59,14 @@ typedef struct logarithm
 
 enum operations_
 {
-        NOOP, 
+        NOOP,
+
         ADD, 
         SUB, 
         MUL, 
-        DIV
+        DIV,
+
+        MOD
 };
 
 enum part_type_
@@ -71,15 +74,19 @@ enum part_type_
         NOPART, 
         PAR,
         VAR,
-        NUM, 
+        NUM,
+
         LOG,
+        LN,
 
         SIN,
         COS,
         TAN,
         SEC,
         CSC,
-        COT
+        COT,
+
+        SQRT
 };
 
 /* 

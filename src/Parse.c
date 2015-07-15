@@ -66,6 +66,10 @@ part_type get_part(
         part_type temp_part
 );
 
+op_type get_op(
+        char c
+);
+
 /** Parses the given function from a string into a sequential linked list of
   * FunctionParts with operators inbetween.  
   * WIP
@@ -74,12 +78,12 @@ function * parseFunction(
         const char * theFunction,
         var * root_var_list
 ) {
-    int i; /* iterator */
-    int par_bal = 0;
+    int i;                    /* iterator */
+    int par_bal = 0;          /* parenthesis balance */
     unsigned int P_BOOLS = 0; /* This variable is used in bool defines */
 
-    op_type   temp_op;
-    part_type temp_part;
+    op_type   temp_op;        /* temporary operation */
+    part_type temp_part;      /* temporary part */
 
     function * func = initializeFunction(theFunction);
     if (root_var_list != NULL)
@@ -95,7 +99,7 @@ function * parseFunction(
         /* NUMBERS */
         if (isdigit(c)) 
         {
-            if (CHECK(HAS_VAR)) 
+            if (CHECK(HAS_VAR) && !CHECK(HAS_EXP)) 
             {
                 print_parse_error(
                     "Cannot have digit immediately after variable without operation",
@@ -107,7 +111,21 @@ function * parseFunction(
            SET_TRUE(HAS_NUM);
            SET_FALSE(HAS_OP);
         }
-
+        /* FACTORIAL */
+        else if (c == '!')
+        {
+            if (i == 0 || (!isdigit(theFunction[i-1])
+                           && !isalpha(theFunction[i-1])
+                           && theFunction[i-1] != '!'))
+            {
+                print_parse_error(
+                    "Factorial must follow a value",
+                    theFunction, i);
+                return NULL;
+            }
+            else
+               appendStr(func_builder, &c, 1);
+        } 
         /* LETTERS */
         else if (isalpha(c))  //should recognize log(, ln(, pi, e, L(), and !
         {
@@ -115,9 +133,12 @@ function * parseFunction(
             // function to equationList and create new function 
             if ((temp_part = isTrigFunction(&theFunction[i]))) 
             {
-                if (!CHECK(HAS_OP))
+                if (i != 0 && !CHECK(HAS_OP) && !CHECK(HAS_EXP))
                 {
-                     addToFunctionList(func, func_builder, get_part(P_BOOLS, temp_part), MUL);
+                     addToFunctionList(func,
+                                       func_builder,
+                                       get_part(P_BOOLS, temp_part),
+                                       MUL);
                      P_BOOLS = 0;
                 }
                 SET_TRUE(IS_TRIG);
@@ -126,7 +147,6 @@ function * parseFunction(
 
                 goto parseParenthesis;
             }
-
             // Variable parse errors 
             else if (theFunction[i-1] == '.') 
             {
@@ -135,16 +155,30 @@ function * parseFunction(
                     theFunction, i); 
                 return NULL;
             }
+            // Exponent contains a variable -> assume that's all in exponent
+            else if (CHECK(HAS_EXP) && theFunction[i-1] == '^')
+            {
+                appendStr(func_builder, &c, 1);
+                if (theFunction[i+1] == '!')
+                    appendStr(func_builder, &theFunction[i++ + 1], 1);
 
+                addToFunctionList(func,
+                                  func_builder,
+                                  get_part(P_BOOLS, temp_part),
+                                  get_op(theFunction[i+1]));
+                P_BOOLS = 0;
+            }
             // Assume it's a variable
             else
             {
                  if (func_builder[0] != '\0')
                  {
-                     addToFunctionList(func, func_builder, get_part(P_BOOLS, temp_part), MUL);
+                     addToFunctionList(func,
+                                       func_builder,
+                                       get_part(P_BOOLS, temp_part),
+                                       MUL);
                      P_BOOLS = 0;
                  }
-                     
                  appendStr(func_builder, &c, 1);
                  SET_TRUE(HAS_VAR);
             }
@@ -197,7 +231,7 @@ function * parseFunction(
                     addToFunctionList(func,
                                       func_builder,
                                       get_part(P_BOOLS, temp_part),
-                                      SUB); // Test to see part type
+                                      SUB);
                     P_BOOLS = 0;
                     SET_TRUE(HAS_OP);
 
@@ -259,20 +293,18 @@ function * parseFunction(
                            && theFunction[i-1] != ')')) 
                 {
                     print_parse_error(
-                        "Must proceed a number, variable, or parenthesis.",
+                        "Exponent must proceed a number, variable, or parenthesis.",
                         theFunction, i);
                     return NULL;
                 }
-
                 // Append to function and set exponent to true, negative 
                 // and decimal to false for exponent number                 
                 else 
-                {//Needs work!!!!!!
+                {
                     appendStr(func_builder, &theFunction[i], 1);
                     SET_TRUE(HAS_EXP);
                     SET_FALSE(HAS_NEG);
                     SET_FALSE(HAS_DEC);
-                    SET_FALSE(HAS_VAR);
                 }
 
             // If exponent sign already exists, throw exception
@@ -282,7 +314,6 @@ function * parseFunction(
                 print_parse_error(
                     "Function already contains an exponent.",
                     theFunction, i);
-                
                 return NULL;
             }
         }
@@ -293,9 +324,8 @@ function * parseFunction(
             if (i == 0 || CHECK(HAS_OP)) 
             {
                 print_parse_error(
-                    "Must proceed a number, variable, or parenthesis.",
+                    "Operation must proceed a number, variable, or parenthesis.",
                     theFunction, i);
-
                 return NULL;
             }
 
@@ -358,6 +388,9 @@ function * parseFunction(
                         
                         if (par_bal == 0)
                         {
+                            if (theFunction[i+1] == '!')
+                                appendStr(func_builder, &theFunction[i++ + 1], 1);
+
                             switch(theFunction[i+1]) 
                             {
                             case '+': temp_op = ADD; ++i; SET_TRUE(HAS_OP);
@@ -471,16 +504,29 @@ part_type get_part(
         unsigned int P_BOOLS,
         const part_type temp_part
 ) {
-    if (CHECK(HAS_NUM))
-        return NUM;
-    else if (CHECK(HAS_VAR))
+    if (CHECK(HAS_VAR))
         return VAR;
+    else if (CHECK(HAS_NUM))
+        return NUM;
     else if (CHECK(IS_TRIG))
         return temp_part;
     else if (CHECK(IS_PAR))
         return PAR;
     else
         return NOPART;
+}
+
+op_type get_op(
+        char c
+) {
+    switch(c)
+    {
+        case '+': return  ADD;
+        case '-': return  SUB;
+        case '/': return  DIV;
+        case '\0': return NOOP;
+        default: return MUL;
+    }
 }
 
 /* Returns the string of the current function and the index the error
