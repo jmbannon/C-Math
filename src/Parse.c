@@ -124,7 +124,7 @@ function * parseFunction(
                 appendStr(func_builder, &theFunction[i], 3);
                 i += 3;
 
-                goto parseParenthesis;  // line 338
+                goto parseParenthesis;
             }
 
             // Variable parse errors 
@@ -135,10 +135,6 @@ function * parseFunction(
                     theFunction, i); 
                 return NULL;
             }
-            
-            // Append and deal with later if it's in parenthesis or function
-            else if (CHECK(IS_PAR) || CHECK(IS_TRIG))
-                appendStr(func_builder, &c, 1);
 
             // Assume it's a variable
             else
@@ -152,8 +148,6 @@ function * parseFunction(
                  appendStr(func_builder, &c, 1);
                  SET_TRUE(HAS_VAR);
             }
-
-            SET_FALSE(HAS_OP);
         }
 
         /* DECIMAL POINT */
@@ -194,20 +188,20 @@ function * parseFunction(
         {                   
             if (!CHECK(HAS_NEG)) 
             {
-                // If the function has numbers/variables and is not 
-                // in parenthesis, act as operator.         
+                // If the function has numbers/variables, act as subtraction     
                 if (strlen(func_builder) != 0 
-                       && !CHECK(IS_PAR) 
-                       && !CHECK(IS_TRIG)
                        && !CHECK(HAS_OP)
                        && !CHECK(HAS_EXP)) 
                 {
                     printf("subtraction func list: %s", func_builder);
-                    addToFunctionList(func, func_builder, get_part(P_BOOLS, temp_part), SUB); // Test to see part type
+                    addToFunctionList(func,
+                                      func_builder,
+                                      get_part(P_BOOLS, temp_part),
+                                      SUB); // Test to see part type
                     P_BOOLS = 0;
                     SET_TRUE(HAS_OP);
 
-                // Otherwise append to function
+                // Otherwise act as negative symbol and append to buffer
                 } 
                 else 
                 {
@@ -218,51 +212,37 @@ function * parseFunction(
                             theFunction, i); 
                         return NULL;
                     }
-                    else 
-                    {
-                        appendStr(func_builder, &c, 1);
-                        SET_TRUE(HAS_NEG);
-                    }
+                    appendStr(func_builder, &c, 1);
+                    SET_TRUE(HAS_NEG);
                 }                
             }
 
             // If negative sign is present
             else 
             {
-                // If function already contains a negative and not in 
-                // parenthesis string, throw exception 
-                if (strcmp(func_builder, "-") == 0 
-                        && !CHECK(IS_PAR)
-                        && !CHECK(IS_TRIG)) 
+                // If function already contains a negative
+                if (strcmp(func_builder, "-") == 0) 
                 {
                     print_parse_error(
                         "A subtraction operation already exists.",
                         theFunction, i); 
                     return NULL;
                 }
-
-                // If no parenthesis, act as subtraction operation: 
-                // add function to list. 
-                if (!CHECK(IS_PAR) && !CHECK(IS_TRIG)) 
+                else if (CHECK(HAS_OP)) 
                 {
-                    if (CHECK(HAS_OP)) 
-                    {
-                        print_parse_error(
-                            "A subtraction operator already exists",
-                            theFunction, i);
-                        
-                        return NULL;
-                    }
-
-                    addToFunctionList(func, func_builder, get_part(P_BOOLS, temp_part), SUB); 
-                    P_BOOLS = 0;    
-                    SET_TRUE(HAS_OP);
+                    print_parse_error(
+                        "A subtraction operator already exists",
+                        theFunction, i);
+                    
+                    return NULL;
                 }
 
-                // If within parenthesis, append to function to handle 
-                // in recursion 
-                else
-                    appendStr(func_builder, &c, 1);
+                addToFunctionList(func,
+                                  func_builder,
+                                  get_part(P_BOOLS, temp_part),
+                                  SUB); 
+                P_BOOLS = 0;    
+                SET_TRUE(HAS_OP);
             }
         }
 
@@ -272,25 +252,22 @@ function * parseFunction(
             parseExponent:  
             if (!CHECK(HAS_EXP)) 
             {
-            
                 // If exponent does not proceed number or variable, 
                 // throw exception. 
-                if (i == 0 
-                       || (!isdigit(theFunction[i-1]) 
+                if (i == 0 || (!isdigit(theFunction[i-1]) 
                            && !isalpha(theFunction[i-1]) 
                            && theFunction[i-1] != ')')) 
                 {
                     print_parse_error(
                         "Must proceed a number, variable, or parenthesis.",
                         theFunction, i);
-
                     return NULL;
                 }
 
                 // Append to function and set exponent to true, negative 
                 // and decimal to false for exponent number                 
                 else 
-                {
+                {//Needs work!!!!!!
                     appendStr(func_builder, &theFunction[i], 1);
                     SET_TRUE(HAS_EXP);
                     SET_FALSE(HAS_NEG);
@@ -322,25 +299,18 @@ function * parseFunction(
                 return NULL;
             }
 
-            // If it is not in parenthesis or function, add 
-            // function and operator to list 
-            else if (!CHECK(IS_PAR) && !CHECK(IS_TRIG)) 
+            switch(c) 
             {
-                switch(c) 
-                {
                 case '+': temp_op = ADD; break;
                 case '*': temp_op = MUL; break;
                 case '/': temp_op = DIV; break;
                 default: temp_op = NOOP;
-                }
-                addToFunctionList(func, func_builder, get_part(P_BOOLS, temp_part), temp_op);
-                P_BOOLS = 0;
             }
-
-            // Otherwise append to function to deal with in recursion
-            else
-                appendStr(func_builder, &c, 1);
-
+            addToFunctionList(func,
+                              func_builder,
+                              get_part(P_BOOLS, temp_part),
+                              temp_op);
+            P_BOOLS = 0;
             SET_TRUE(HAS_OP);
         }
 
@@ -361,8 +331,10 @@ function * parseFunction(
                 if (!CHECK(HAS_OP) && !CHECK(IS_TRIG) && !CHECK(HAS_EXP) 
                         && strlen(func_builder) != 0)
                 {
-                    printf("parenth mult = %s\n", func_builder);
-                    addToFunctionList(func, func_builder, get_part(P_BOOLS, temp_part), MUL);
+                    addToFunctionList(func,
+                                      func_builder,
+                                      get_part(P_BOOLS, temp_part),
+                                      MUL);
                 }
 
                 // Always appends opening parenthesis to 
@@ -523,6 +495,6 @@ char * err_loc_msg(
             "Function: %s : Index: %d", function, index);
     else
         sprintf(error_loc_buffer, 
-            "  Function: %s : Index: end of function", function); 
+            "  Function: %s : Index: end of function", function);
     return error_loc_buffer;
 }
