@@ -102,9 +102,9 @@ function * parseFunction(
                     theFunction, i); 
                 return NULL;
             }
-            else
-                appendChar(func_builder, c);       
 
+           appendChar(func_builder, c);     
+           SET_TRUE(HAS_NUM);
            SET_FALSE(HAS_OP);
         }
 
@@ -115,13 +115,12 @@ function * parseFunction(
             // function to equationList and create new function 
             if ((temp_part = isTrigFunction(&theFunction[i]))) 
             {
-                SET_TRUE(IS_TRIG);
-
                 if (!CHECK(HAS_OP))
                 {
                      addToFunctionList(func, func_builder, get_part(P_BOOLS, temp_part), MUL);
+                     P_BOOLS = 0;
                 }
-
+                SET_TRUE(IS_TRIG);
                 appendStr(func_builder, &theFunction[i], 3);
                 i += 3;
 
@@ -146,9 +145,8 @@ function * parseFunction(
             {
                  if (func_builder[0] != '\0')
                  {
-                     printf("implicit var mult: %s\n", func_builder);
                      addToFunctionList(func, func_builder, get_part(P_BOOLS, temp_part), MUL);
-                     //printf("New Part!\n");
+                     P_BOOLS = 0;
                  }
                      
                  appendStr(func_builder, &c, 1);
@@ -206,11 +204,8 @@ function * parseFunction(
                 {
                     printf("subtraction func list: %s", func_builder);
                     addToFunctionList(func, func_builder, get_part(P_BOOLS, temp_part), SUB); // Test to see part type
+                    P_BOOLS = 0;
                     SET_TRUE(HAS_OP);
-                    SET_FALSE(HAS_NEG);
-                    SET_FALSE(HAS_DEC);
-                    SET_FALSE(HAS_EXP);
-                    SET_FALSE(HAS_VAR);
 
                 // Otherwise append to function
                 } 
@@ -259,8 +254,8 @@ function * parseFunction(
                         return NULL;
                     }
 
-                    addToFunctionList(func, func_builder, get_part(P_BOOLS, temp_part), SUB);     
-                    //printf("new part!\n");
+                    addToFunctionList(func, func_builder, get_part(P_BOOLS, temp_part), SUB); 
+                    P_BOOLS = 0;    
                     SET_TRUE(HAS_OP);
                 }
 
@@ -268,11 +263,6 @@ function * parseFunction(
                 // in recursion 
                 else
                     appendStr(func_builder, &c, 1);
-
-                SET_FALSE(HAS_NEG);
-                SET_FALSE(HAS_DEC);
-                SET_FALSE(HAS_EXP);
-                SET_FALSE(HAS_VAR);
             }
         }
 
@@ -343,22 +333,15 @@ function * parseFunction(
                 case '/': temp_op = DIV; break;
                 default: temp_op = NOOP;
                 }
-                printf("operation part type: %s\n", func_builder);
                 addToFunctionList(func, func_builder, get_part(P_BOOLS, temp_part), temp_op);
-                //printf("new part!\n");
+                P_BOOLS = 0;
             }
 
             // Otherwise append to function to deal with in recursion
             else
                 appendStr(func_builder, &c, 1);
 
-            // Clears negative, decimal, and exponent 
-            // for next value after operation 
             SET_TRUE(HAS_OP);
-            SET_FALSE(HAS_NEG);
-            SET_FALSE(HAS_DEC);
-            SET_FALSE(HAS_EXP);
-            SET_FALSE(HAS_VAR);
         }
 
         /* OPENING PARENTHESIS, NEEDS OVERHAUL */     
@@ -374,6 +357,7 @@ function * parseFunction(
             {
                 // (Function handles operations) 
                 // Assume it's implicit multiplication
+                SET_TRUE(IS_PAR);
                 if (!CHECK(HAS_OP) && !CHECK(IS_TRIG) && !CHECK(HAS_EXP) 
                         && strlen(func_builder) != 0)
                 {
@@ -427,12 +411,8 @@ function * parseFunction(
                             addToFunctionList(func, 
                                               func_builder,
                                               get_part(P_BOOLS, temp_part),
-                                              temp_op); 
-
-                            SET_FALSE(HAS_NEG);
-                            SET_FALSE(HAS_DEC);
-                            SET_FALSE(HAS_EXP);
-                            SET_FALSE(HAS_VAR);
+                                              temp_op);
+                            P_BOOLS = 0;
                             break;
                         }  
                     }    
@@ -464,7 +444,6 @@ function * parseFunction(
 
     if (func_builder[0] != '\0')
     {
-        printf("end type: %s\n", func_builder);
         addToFunctionList(func, 
                           func_builder,
                           get_part(P_BOOLS, temp_part),
