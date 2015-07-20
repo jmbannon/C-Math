@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "Function.h"
 #include "Boolean.h"
 #include "Parse.h"
@@ -33,29 +34,17 @@ struct function
     functionPart * head;
 };
 
-struct numeric 
-{
-    double constant;
-};
-
 struct variable
 {
     char variable;
-    num value;
+    double * num;
     function * func;    
-};
-
-union base_union 
-{
-    functionPart * parenthesis;
-    num * num;
-    trig * trig;
-    log * log;
 };
 
 union exponent_union 
 {
     num * num;
+    var * var;
     functionPart * parenthesis;
 };
 
@@ -71,11 +60,20 @@ struct logarithm
     functionPart * contents;
 };
 
+union base_union 
+{
+    functionPart * parenthesis;
+    var var;
+    double num;
+    trig trig;
+    log log;
+};
+
 struct function_part 
 {
     function * func;
     char * str;
-    base part;
+    base base;
     exponent exponent;
     op_type operation;
     functionPart * prev;
@@ -112,21 +110,38 @@ void initializePart(
         var * root_var_list
 ) {
 
-    int i = 0, len = strlen(thePart->str);
-    function * newPart;
+    int i = 0, j = 0, len = strlen(thePart->str);
+    char * temp;
 
-    if (thePart->str[i] == '(')
+    if (type == PAR)
     {
-        thePart->part.parenthesis = parse_parenthesis_part(thePart->str,
+        thePart->base.parenthesis = parse_parenthesis_part(thePart->str,
                                                            root_var_list);
+    }
+    else if (type == VAR)
+    {
+        thePart->base.var.variable = thePart->str[0];
+    }
+    else if (type == NUM)
+    {
+        temp = malloc(sizeof(thePart->str));
+        while (isdigit(thePart->str[i]) || thePart->str[i] == '.'
+                                        || thePart->str[i] == '-')
+        {
+            temp[i] = thePart->str[i];
+            ++i;
+        }
+        thePart->base.num = atof(temp);
+        free(temp);
     }
 
     while (i < len && thePart->str[i] != '^') ++i;
     if (thePart->str[i] == '^')
     {
         if (thePart->str[i+1] == '(')
-            thePart->exponent.parenthesis = parse_parenthesis_part(&thePart->str[i+1],
-                                                                    root_var_list);
+            thePart->exponent.parenthesis
+                = parse_parenthesis_part(&thePart->str[i+1],
+                                          root_var_list);
     }
 }
 
