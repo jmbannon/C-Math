@@ -31,9 +31,6 @@ typedef struct function
 typedef union base_union
         base;
 
-typedef union exponent_union
-        exponent;
-
 typedef struct function_part 
         functionPart;
 
@@ -43,12 +40,8 @@ typedef struct variable
 typedef struct numeric 
         num;
 
-typedef struct trigonometry 
-        trig;
-
-typedef struct logarithm 
-        log;
-
+typedef struct other_function 
+        fun;
 /* 
  =======================================================================
 
@@ -130,8 +123,8 @@ void addToFunctionList(
 );
 
 void addToVariableList(
-    function * theFunction,
-    char variable
+        function * theFunction,
+        char variable
 );
 
 #endif

@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
 #include "Function.h"
 #include "Boolean.h"
 #include "Parse.h"
@@ -41,22 +42,9 @@ struct variable
     function * func;    
 };
 
-union exponent_union 
+struct other_function 
 {
-    num * num;
-    var * var;
-    functionPart * parenthesis;
-};
-
-struct trigonometry 
-{
-    part_type trig_type;
-    functionPart * contents;
-};
-
-struct logarithm 
-{
-    double base;
+    part_type type;
     functionPart * contents;
 };
 
@@ -65,8 +53,7 @@ union base_union
     functionPart * parenthesis;
     var var;
     double num;
-    trig trig;
-    log log;
+    fun fun;
 };
 
 struct function_part 
@@ -74,7 +61,7 @@ struct function_part
     function * func;
     char * str;
     base base;
-    exponent exponent;
+    base exponent;
     op_type operation;
     functionPart * prev;
     functionPart * next;
@@ -101,6 +88,55 @@ functionPart * parse_parenthesis_part(
  =======================================================================
 */
 
+void initialize_par(functionPart * part,
+                    var * root_var_list)
+{
+    part->base.parenthesis = parse_parenthesis_part(part->str,
+                                                    root_var_list);
+}
+
+void initialize_var(functionPart * part,
+                    var * root_var_list)
+{
+    assert(isalpha(part->str[0]));
+    part->base.var.variable = part->str[0];
+    addToVariableList(part->func, part->str[0]);
+}
+
+void initialize_num(functionPart * part,
+                    var * root_var_list)
+{
+    int i = 0;
+    char * temp = malloc(sizeof(part->str));
+    while (isdigit(part->str[i]) || part->str[i] == '.'
+                                 || part->str[i] == '-')
+    {
+        temp[i] = part->str[i];
+        ++i;
+    }
+    part->base.num = atof(temp);
+    free(temp);
+}
+
+void initialize_fun(functionPart * part,
+                    var * root_var_list,
+                    const part_type type)
+{
+    assert(type != NOPART);
+
+    int i = 0;
+    part->base.fun.type = type;
+    switch(type)
+    {
+        case LN:   i += 2; break;
+        case SQRT: i += 4; break;
+        default:   i += 3; break;
+    }
+    part->base.fun.contents = parse_parenthesis_part(&part->str[i],
+                                                     root_var_list);
+}
+
+
 /* Determines the part_union for the given functionPart.
  * Creates the part based on parsing the first char within its string
  */
@@ -109,32 +145,14 @@ void initializePart(
         const part_type type,
         var * root_var_list
 ) {
-
-    int i = 0, j = 0, len = strlen(thePart->str);
-    char * temp;
-
-    if (type == PAR)
+    int i = 0, len = strlen(thePart->str);
+    switch(type)
     {
-        thePart->base.parenthesis = parse_parenthesis_part(thePart->str,
-                                                           root_var_list);
+        case PAR: initialize_par(thePart, root_var_list); break;
+        case VAR: initialize_var(thePart, root_var_list); break;
+        case NUM: initialize_num(thePart, root_var_list); break;
+        default:  initialize_fun(thePart, root_var_list, type); break;
     }
-    else if (type == VAR)
-    {
-        thePart->base.var.variable = thePart->str[0];
-    }
-    else if (type == NUM)
-    {
-        temp = malloc(sizeof(thePart->str));
-        while (isdigit(thePart->str[i]) || thePart->str[i] == '.'
-                                        || thePart->str[i] == '-')
-        {
-            temp[i] = thePart->str[i];
-            ++i;
-        }
-        thePart->base.num = atof(temp);
-        free(temp);
-    }
-
     while (i < len && thePart->str[i] != '^') ++i;
     if (thePart->str[i] == '^')
     {
@@ -142,6 +160,15 @@ void initializePart(
             thePart->exponent.parenthesis
                 = parse_parenthesis_part(&thePart->str[i+1],
                                           root_var_list);
+    }
+    else if (isalpha(thePart->str[i]))
+    {
+        thePart->exponent.var.variable = thePart->str[i];
+        addToVariableList(thePart->func, thePart->str[i]);
+    }
+    else if (isdigit(thePart->str[i]) || thePart->str[i] == '-')
+    {
+
     }
 }
 
@@ -152,7 +179,7 @@ functionPart * parse_parenthesis_part(
         char * par_str,
         var * root_var_list
 ) {
-    int i = 1, par_bal = 1, len = strlen(par_str);
+    int i = 0, par_bal = 1, len = strlen(par_str);
     while (i < len-1 && par_bal != 0)
     {
         if (par_str[i+1] == '(') ++par_bal;
@@ -160,7 +187,7 @@ functionPart * parse_parenthesis_part(
         
         if (par_bal != 0) ++i;
     }
-    if (par_bal != 0) printf("mass error dude");
+    assert(par_bal == 0);
     return parseFunctionPart(substring(par_str, 1, i), root_var_list);
 }
 
@@ -211,7 +238,7 @@ void printInfo(
     printf("Full function: %s\n", theFunction->str);
     functionPart* curr = theFunction->head;
 
-    printf("%x\n", theFunction->head);
+    //printf("%x\n", theFunction->head);
     while (curr != NULL) 
     {
         printf("Part: %s Op: %d\n", curr->str, curr->operation);
