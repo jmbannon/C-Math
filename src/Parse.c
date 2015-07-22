@@ -29,9 +29,9 @@
 #include <ctype.h>
 #include "Parse.h"
 #include "Function.h"
-#include "ErrorMessage.h"
-#include "StringExtensions.h"
-#include "Boolean.h"
+#include "utilities/ErrorMessage.h"
+#include "utilities/StringExtensions.h"
+#include "utilities/Boolean.h"
 
 #define HAS_OP  (0)
 #define HAS_NEG (1)
@@ -40,7 +40,7 @@
 #define HAS_EXP (4)
 #define HAS_VAR (5)
 #define IS_PAR  (6)
-#define IS_TRIG (7)
+#define IS_FUN (7)
 
 #define SET_TRUE(BOOL, value) (BOOL |= 1 << value)
 #define SET_FALSE(BOOL, value) (BOOL &= ~(1 << value))
@@ -142,7 +142,7 @@ function * parseFunction(
                                        MUL);
                      B_BOOLS = 0;
                 }
-                SET_TRUE(B_BOOLS, IS_TRIG);
+                SET_TRUE(B_BOOLS, IS_FUN);
                 appendStr(func_builder, &theFunction[i], 3);
                 i += 3;
 
@@ -355,7 +355,7 @@ function * parseFunction(
                 // (Function handles operations) 
                 // Assume it's implicit multiplication
                 SET_TRUE(B_BOOLS, IS_PAR);
-                if (!CHECK(B_BOOLS, HAS_OP) && !CHECK(B_BOOLS, IS_TRIG)
+                if (!CHECK(B_BOOLS, HAS_OP) && !CHECK(B_BOOLS, IS_FUN)
                                             && !CHECK(B_BOOLS, HAS_EXP) 
                                             && strlen(func_builder) != 0)
                 {
@@ -408,7 +408,7 @@ function * parseFunction(
                                        break;
 
                             case '^':  SET_FALSE(B_BOOLS, IS_PAR);
-                                       SET_FALSE(B_BOOLS, IS_TRIG);
+                                       SET_FALSE(B_BOOLS, IS_FUN);
                                        ++i; goto parseExponent;
 
                             default: temp_op = MUL;
@@ -428,7 +428,7 @@ function * parseFunction(
             } else
                 appendStr(func_builder, &c, 1);
 
-            SET_FALSE(B_BOOLS, IS_TRIG);
+            SET_FALSE(B_BOOLS, IS_FUN);
             SET_FALSE(B_BOOLS, IS_PAR);         
         }
         // Every close parenthesis should be handled 
@@ -505,7 +505,7 @@ part_type get_part(
         return VAR;
     else if (CHECK(B_BOOLS, HAS_NUM))
         return NUM;
-    else if (CHECK(B_BOOLS, IS_TRIG))
+    else if (CHECK(B_BOOLS, IS_FUN))
         return temp_part;
     else if (CHECK(B_BOOLS, IS_PAR))
         return PAR;

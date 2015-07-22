@@ -54,32 +54,33 @@ enum operations_
 {
         NOOP,
 
-        ADD, 
-        SUB, 
-        MUL, 
-        DIV,
+        ADD, // Add 
+        SUB, // Subtract
+        MUL, // Multiply
+        DIV, // Divide
 
-        MOD
+        MOD  // Modular
 };
 
 enum part_type_
 {
         NOPART, 
-        PAR,
-        VAR,
-        NUM,
+        PAR, // Parenthesis
+        VAR, // Variable
+        NUM, // Number
 
-        LOG,
-        LN,
+        LOG, // Logarithm
+        LN,  // Natural Logarithm
 
-        SIN,
-        COS,
-        TAN,
-        SEC,
-        CSC,
-        COT,
+        SIN, // Sine
+        COS, // Cosine
+        TAN, // Tangent
+        SEC, // Secant
+        CSC, // Cosecant
+        COT, // Cotangent
 
-        SQRT
+        ABS, // Absolute Value
+        SQRT // Square Root
 };
 
 /* 

@@ -21,11 +21,11 @@ test.o: test.c
 Function.o: Function.c Function.h
 	$(CC) -c Function.c
 
-StringExtensions.o: StringExtensions.c StringExtensions.h
-	$(CC) -c StringExtensions.c
+StringExtensions.o: utilities/StringExtensions.c utilities/StringExtensions.h
+	$(CC) -c utilities/StringExtensions.c
 
-ErrorMessage.o: ErrorMessage.c ErrorMessage.h
-	$(CC) -c ErrorMessage.c
+ErrorMessage.o: utilities/ErrorMessage.c utilities/ErrorMessage.h
+	$(CC) -c utilities/ErrorMessage.c
 
 Parse.o: Parse.c Parse.h
 	$(CC) -c Parse.c

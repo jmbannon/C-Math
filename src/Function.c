@@ -14,9 +14,9 @@
 #include <ctype.h>
 #include <assert.h>
 #include "Function.h"
-#include "Boolean.h"
+#include "utilities/Boolean.h"
 #include "Parse.h"
-#include "StringExtensions.h"
+#include "utilities/StringExtensions.h"
 
 static int VAR_LIST_SIZE = 64;
 
@@ -50,7 +50,7 @@ struct other_function
 
 union base_union 
 {
-    functionPart * parenthesis;
+    functionPart * par;
     var var;
     double num;
     fun fun;
@@ -91,7 +91,7 @@ functionPart * parse_parenthesis_part(
 void initialize_par(functionPart * part,
                     var * root_var_list)
 {
-    part->base.parenthesis = parse_parenthesis_part(part->str,
+    part->base.par = parse_parenthesis_part(part->str,
                                                     root_var_list);
 }
 
@@ -157,9 +157,8 @@ void initializePart(
     if (thePart->str[i] == '^')
     {
         if (thePart->str[i+1] == '(')
-            thePart->exponent.parenthesis
-                = parse_parenthesis_part(&thePart->str[i+1],
-                                          root_var_list);
+            thePart->exponent.par = parse_parenthesis_part(&thePart->str[i+1],
+                                                           root_var_list);
     }
     else if (isalpha(thePart->str[i]))
     {
@@ -321,6 +320,9 @@ part_type isTrigFunction(
     else if (strncmp(firstLetter, "sqrt(", 5) == 0)
         return SQRT;
 
+    else if (strncmp(firstLetter, "abs(", 4) == 0)
+        return ABS;
+
     else if (strncmp(firstLetter, "log(", 4) == 0)
         return LOG;
 
@@ -374,8 +376,8 @@ void insertVariableToList(
 /* Inserts a variable into the function's variable array if it does not exist.
  */
 void addToVariableList(
-    function * theFunction,
-    char variable
+        function * theFunction,
+        char variable
 ) {
     int insertIdx = needs_var_insert(theFunction, variable);
     if (insertIdx >= 0)
