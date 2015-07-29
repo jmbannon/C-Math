@@ -92,7 +92,7 @@ void initialize_par(functionPart * part,
                     var * root_var_list)
 {
     part->base.par = parse_parenthesis_part(part->str,
-                                                    root_var_list);
+                                            root_var_list);
 }
 
 void initialize_var(functionPart * part,
@@ -197,7 +197,6 @@ function * initializeFunction(
         const char * theFunction
 ) {
     function * func = malloc(sizeof(function));
-
     func->str = malloc(strlen(theFunction)+1);
     strcpy(func->str, theFunction);
     func->head = NULL;
@@ -211,6 +210,12 @@ functionPart * getHead(
         function * theFunction
 ) {
     return theFunction->head;
+}
+
+char * get_func_str(
+        function * func
+) {
+    return func->str;
 }
 
 var * get_var_list(
@@ -231,7 +236,7 @@ void set_var_list(
 void printInfo(
         function * theFunction
 ) {
-    if (!theFunction)
+    if (theFunction == NULL)
         return;
 
     printf("Full function: %s\n", theFunction->str);
@@ -316,6 +321,15 @@ part_type isTrigFunction(
 
     else if (strncmp(firstLetter, "cot(", 4) == 0)
         return COT;
+
+    else if (strncmp(firstLetter, "asin(", 5) == 0)
+        return ASIN;
+
+    else if (strncmp(firstLetter, "acos(", 5) == 0)
+        return ACOS;
+
+    else if (strncmp(firstLetter, "atan(", 5) == 0)
+        return ATAN;
 
     else if (strncmp(firstLetter, "sqrt(", 5) == 0)
         return SQRT;

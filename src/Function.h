@@ -79,6 +79,10 @@ enum part_type_
         CSC, // Cosecant
         COT, // Cotangent
 
+        ASIN,// Inverse Sine
+        ACOS,// Inverse Cosine
+        ATAN,// Inverse Tangent
+
         ABS, // Absolute Value
         SQRT // Square Root
 };
@@ -97,6 +101,10 @@ function * initializeFunction(
 
 functionPart * getHead(
         function * theFunction
+);
+
+char * get_func_str(
+        function * func
 );
 
 var * get_var_list(
