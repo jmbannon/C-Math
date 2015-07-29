@@ -28,10 +28,10 @@
 #include <string.h>
 #include <ctype.h>
 #include "Parse.h"
-#include "Function.h"
-#include "utilities/ErrorMessage.h"
-#include "utilities/StringExtensions.h"
-#include "utilities/Boolean.h"
+#include "../Function.h"
+#include "../../utilities/ErrorMessage.h"
+#include "../../utilities/StringExtensions.h"
+#include "../../utilities/Boolean.h"
 
 #define HAS_OP  (0)
 #define HAS_NEG (1)
@@ -40,11 +40,11 @@
 #define HAS_EXP (4)
 #define HAS_VAR (5)
 #define IS_PAR  (6)
-#define IS_FUN (7)
+#define IS_FUN  (7)
 
-#define SET_TRUE(BOOL, value) (BOOL |= 1 << value)
+#define SET_TRUE(BOOL, value)  (BOOL |= 1 << value)
 #define SET_FALSE(BOOL, value) (BOOL &= ~(1 << value))
-#define CHECK(BOOL, value) (BOOL & 1 << value)
+#define CHECK(BOOL, value)     (BOOL & 1 << value)
 
 static char * file_name = "Parse.c";
 static char error_loc_buffer[1024];
@@ -88,6 +88,30 @@ bool parse_exponent(
         part_type    * temp_part
 );
 
+bool parse_decimal(
+        function     * func,
+        unsigned int * i,
+        char         * func_builder,
+        unsigned int * B_BOOLS,
+        part_type    * temp_part
+);
+
+bool parse_dash(
+        function     * func,
+        unsigned int * i,
+        char         * func_builder,
+        unsigned int * B_BOOLS,
+        part_type    * temp_part
+);
+
+bool parse_operator(
+        function     * func,
+        unsigned int * i,
+        char         * func_builder,
+        unsigned int * B_BOOLS,
+        part_type    * temp_part
+);
+
 void print_parse_error(
         const char * description,
         const char * function,
@@ -114,166 +138,52 @@ op_type get_op(
   */
 function * parseFunction(
         const char * func_str,
-        var        * root_var_list
+        function   * root_func
 ) {
-    /* iterator, parse_check, parenthesis_balance, base_bools */
-    unsigned int i, pc = true, par_bal = 0, B_BOOLS = 0;
-    op_type   temp_op;             /* temporary operation */
-    part_type temp_part, exp_part; /* temporary part, exponent part */
-
-    function * func = initializeFunction(func_str);
-    if (root_var_list != NULL)
-        set_var_list(func, root_var_list);
-
+    unsigned int i;
+    unsigned int par_bal = 0;
+    unsigned int B_BOOLS = 0;
     char func_builder[1024] = {0};
-    char c, temp_char;
+    char c;
+    bool pc = true;
+    op_type   temp_op;
+    part_type temp_part; 
+    part_type exp_part;
+    function * func = initializeFunction(func_str);
+
+    if (root_func == NULL)
+        root_func = func;
+    
+    func->root_func = root_func;
+    func->var_list = root_func->var_list;
 
     for (i = 0; i < strlen(func_str); i++) 
     {
         c = func_str[i];
-        /* NUMBERS */
         if (isdigit(c))
             pc = parse_digit(func, &i, func_builder, &B_BOOLS);
 
-        /* FACTORIAL */
         else if (c == '!')
             pc = parse_factorial(func, &i, func_builder, &B_BOOLS);
  
-        /* LETTERS */
-        else if (isalpha(c)) { //should recognize log(, ln(, pi, e, L(), and !
+        else if (isalpha(c)) //should recognize log(, ln(, pi, e, L(), and !
             pc = parse_alpha(func, &i, func_builder, &B_BOOLS, &temp_part);
-        }
-        /* DECIMAL POINT */
+        
         else if (c == '.') 
-        {
-            if (!CHECK(B_BOOLS, HAS_DEC)) 
-            {
-                 temp_char = '0';
-                 
-                 // If letter precedes decimal, throw error. 
-                 if (isalpha(func_str[i-1])) 
-                 {
-                     print_parse_error(
-                        "A decimal point cannot proceed a variable.",
-                        func_str, i); 
-                     return NULL;
-                 }
+            pc = parse_decimal(func, &i, func_builder, &B_BOOLS, &temp_part);
 
-                 // If a number does not precede decimal, add 0 first
-                 else if (i == 0 || !isdigit(func_str[i-1]))
-                 {
-                     appendStr(func_builder, &temp_char, 1);
-                     SET_TRUE(B_BOOLS, HAS_NUM);
-                 }
-                 /* Append and set has_dec to true. */
-                 appendStr(func_builder, &c, 1);
-                 SET_TRUE(B_BOOLS, HAS_DEC);
-            }
-            else 
-            {
-                print_parse_error(
-                    "Numeric already contains a decimal.",
-                    func_str, i); 
-                return NULL;
-            }
-        }
-
-        /* NEGATIVE/SUBTRACTION */
         else if (c == '-')        
-        {                   
-            if (!CHECK(B_BOOLS, HAS_NEG)) 
-            {
-                // If the function has numbers/variables, act as subtraction
-                if (strlen(func_builder) != 0 
-                       && !CHECK(B_BOOLS, HAS_OP)
-                       && !CHECK(B_BOOLS, HAS_EXP)) 
-                {
-                    printf("subtraction func list: %s", func_builder);
-                    addToFunctionList(func,
-                                      func_builder,
-                                      get_part(B_BOOLS, temp_part),
-                                      SUB);
-                    B_BOOLS = 0;
-                    SET_TRUE(B_BOOLS, HAS_OP);
+            pc = parse_dash(func, &i, func_builder, &B_BOOLS, &temp_part);
 
-                // Otherwise act as negative symbol and append to buffer
-                } 
-                else 
-                {
-                    if (i != 0 && func_str[i-1] == '.')
-                    {
-                        print_parse_error(
-                            "Cannot subtract a decimal.",
-                            func_str, i); 
-                        return NULL;
-                    }
-                    appendStr(func_builder, &c, 1);
-                    SET_TRUE(B_BOOLS, HAS_NEG);
-                }                
-            }
-            // If negative sign is present
-            else 
-            {
-                // If function already contains a negative
-                if (strcmp(func_builder, "-") == 0) 
-                {
-                    print_parse_error(
-                        "A subtraction operation already exists.",
-                        func_str, i); 
-                    return NULL;
-                }
-                else if (CHECK(B_BOOLS, HAS_OP)) 
-                {
-                    print_parse_error(
-                        "A subtraction operator already exists",
-                        func_str, i);
-                    return NULL;
-                }
-                addToFunctionList(func,
-                                  func_builder,
-                                  get_part(B_BOOLS, temp_part),
-                                  SUB); 
-                B_BOOLS = 0;    
-                SET_TRUE(B_BOOLS, HAS_OP);
-            }
-        }
-
-        /* EXPONENT */                                        
         else if (c == '^')
             pc = parse_exponent(func, &i, func_builder, &B_BOOLS, &temp_part);
 
-        /* OPERATORS (BESIDES SUBTRACTION) */
         else if (c == '+' || c == '*' || c == '/') 
-        {  
-            if (i == 0 || CHECK(B_BOOLS, HAS_OP))
-            {
-                print_parse_error(
-                    "Operation must proceed a number, variable, or parenthesis.",
-                    func_str, i);
-                return NULL;
-            }
+            pc = parse_operator(func, &i, func_builder, &B_BOOLS, &temp_part);
 
-            switch(c) 
-            {
-                case '+': temp_op = ADD; break;
-                case '*': temp_op = MUL; break;
-                case '/': temp_op = DIV; break;
-                default: temp_op = NOOP;
-            }
-            addToFunctionList(func,
-                              func_builder,
-                              get_part(B_BOOLS, temp_part),
-                              temp_op);
-            B_BOOLS = 0;
-            SET_TRUE(B_BOOLS, HAS_OP);
-        }
-
-        /* OPENING PARENTHESIS, NEEDS OVERHAUL */     
         else if (c == '(')                                               
             pc = parse_parenthesis(func, &i, func_builder, &B_BOOLS, &temp_part);
 
-        // Every close parenthesis should be handled 
-        // in opening parenthesis parse
         else if (c == ')')                                                 
         {       
             print_parse_error(
@@ -291,7 +201,7 @@ function * parseFunction(
 
         if (!pc)
             return NULL;
-    } //end of forloop
+    }
 
     if (func_builder[0] != '\0')
     {
@@ -318,7 +228,7 @@ bool parse_digit(
         char         * func_builder,
         unsigned int * B_BOOLS
 ) {
-    char * func_str = get_func_str(func);
+    char * func_str = func->str;
     if (CHECK(*B_BOOLS, HAS_VAR) && !CHECK(*B_BOOLS, HAS_EXP)) 
     {
        print_parse_error(
@@ -338,7 +248,7 @@ bool parse_factorial(
         char         * func_builder,
         unsigned int * B_BOOLS
 ) {
-    char * func_str = get_func_str(func);
+    char * func_str = func->str;
     if (*i == 0 || 
        (!isdigit(func_str[*i-1]) &&
         !isalpha(func_str[*i-1])))
@@ -360,7 +270,7 @@ bool parse_alpha(
         unsigned int * B_BOOLS,
         part_type    * temp_part
 ) {
-    char * func_str = get_func_str(func);
+    char * func_str = func->str;
     if (*i > 0 && func_str[*i-1] == '.') 
     {
         print_parse_error(
@@ -370,7 +280,7 @@ bool parse_alpha(
     }
     // If letters proceed are a trig function, add preceding
     // function to equationList and create new function 
-    else if ((*temp_part = isTrigFunction(&func_str[*i]))) 
+    else if ((*temp_part = is_func_type(&func_str[*i]))) 
     {
         if (*i != 0 && 
             !CHECK(*B_BOOLS, HAS_OP) &&
@@ -424,7 +334,7 @@ bool parse_parenthesis(
         unsigned int * B_BOOLS,
         part_type    * temp_part
 ) {
-    char * func_str = get_func_str(func);
+    char * func_str = func->str;
     int par_bal = 1;
     if (!CHECK(*B_BOOLS, IS_PAR))
     {
@@ -518,7 +428,7 @@ bool parse_exponent(
         unsigned int * B_BOOLS,
         part_type    * temp_part
 ) {
-    char * func_str = get_func_str(func);
+    char * func_str = func->str;
     if (!CHECK(*B_BOOLS, HAS_EXP)) 
     {
         // If exponent does not proceed number or variable, 
@@ -549,8 +459,8 @@ bool parse_exponent(
                 exp_part = NUM;
             else if (isalpha(func_str[*i+1]))
             {
-                if (isTrigFunction(&func_str[*i+1]))
-                    exp_part = isTrigFunction(&func_str[*i+1]);
+                if (is_func_type(&func_str[*i+1]))
+                    exp_part = is_func_type(&func_str[*i+1]);
                 else
                     exp_part = VAR;
             }
@@ -577,14 +487,153 @@ bool parse_exponent(
     return true;
 }
 
+bool parse_decimal(
+        function     * func,
+        unsigned int * i,
+        char         * func_builder,
+        unsigned int * B_BOOLS,
+        part_type    * temp_part
+) {
+    char * func_str = func->str;
+    if (!CHECK(*B_BOOLS, HAS_DEC)) 
+    {
+         // If letter precedes decimal, throw error. 
+         if (isalpha(func_str[*i-1])) 
+         {
+             print_parse_error(
+                "A decimal point cannot proceed a variable.",
+                func_str, *i); 
+             return false;
+         }
+
+         // If a number does not precede decimal, add 0 first
+         else if (*i == 0 || !isdigit(func_str[*i-1]))
+         {
+             appendStr(func_builder, "0", 1);
+             SET_TRUE(*B_BOOLS, HAS_NUM);
+         }
+         /* Append and set has_dec to true. */
+         appendStr(func_builder, &func_str[*i], 1);
+         SET_TRUE(*B_BOOLS, HAS_DEC);
+    }
+    else 
+    {
+        print_parse_error(
+            "Numeric already contains a decimal.",
+            func_str, *i); 
+        return false;
+    }
+    return true;
+}
+
+bool parse_dash(
+        function     * func,
+        unsigned int * i,
+        char         * func_builder,
+        unsigned int * B_BOOLS,
+        part_type    * temp_part
+) {
+    char * func_str = func->str;
+
+    if (!CHECK(*B_BOOLS, HAS_NEG)) 
+    {
+        // If the function has numbers/variables, act as subtraction
+        if (strlen(func_builder) != 0 
+               && !CHECK(*B_BOOLS, HAS_OP)
+               && !CHECK(*B_BOOLS, HAS_EXP)) 
+        {
+            addToFunctionList(func,
+                              func_builder,
+                              get_part(*B_BOOLS, *temp_part),
+                              SUB);
+            *B_BOOLS = 0;
+            SET_TRUE(*B_BOOLS, HAS_OP);
+
+        // Otherwise act as negative symbol and append to buffer
+        } 
+        else 
+        {
+            if (*i != 0 && func_str[*i-1] == '.')
+            {
+                print_parse_error(
+                    "Cannot subtract a decimal.",
+                    func_str, *i); 
+                return false;
+            }
+            appendStr(func_builder, &func_str[*i], 1);
+            SET_TRUE(*B_BOOLS, HAS_NEG);
+        }                
+    }
+    // If negative sign is present
+    else 
+    {
+        // If function already contains a negative
+        if (strncmp(func_builder, "-", 1) == 0) 
+        {
+            print_parse_error(
+                "A subtraction operation already exists.",
+                func_str, *i); 
+            return false;
+        }
+        else if (CHECK(*B_BOOLS, HAS_OP)) 
+        {
+            print_parse_error(
+                "An operator already exists",
+                func_str, *i);
+            return false;
+        }
+        addToFunctionList(func,
+                          func_builder,
+                          get_part(*B_BOOLS, *temp_part),
+                          SUB); 
+        *B_BOOLS = 0;    
+        SET_TRUE(*B_BOOLS, HAS_OP);
+    }
+    return true;
+}
+
+bool parse_operator(
+        function     * func,
+        unsigned int * i,
+        char         * func_builder,
+        unsigned int * B_BOOLS,
+        part_type    * temp_part
+) {
+    char * func_str = func->str;
+    op_type temp_op;
+
+    if (*i == 0 || CHECK(*B_BOOLS, HAS_OP))
+    {
+        print_parse_error(
+            "Operation must proceed a number, variable, or parenthesis.",
+            func_str, *i);
+        return false;
+    }
+
+    switch(func_str[*i]) 
+    {
+        case '+': temp_op = ADD; break;
+        case '*': temp_op = MUL; break;
+        case '/': temp_op = DIV; break;
+        default:  temp_op = NOOP;
+    }
+    addToFunctionList(func,
+                      func_builder,
+                      get_part(*B_BOOLS, *temp_part),
+                      temp_op);
+    *B_BOOLS = 0;
+    SET_TRUE(*B_BOOLS, HAS_OP);
+    return true;
+}
+
 functionPart * parseFunctionPart(
         const char * functionStr,
-        var * root_var_list
+        function   * root_func
 ) {
     functionPart * funcPart;
     
-    function * func = parseFunction(functionStr, root_var_list);
-    funcPart = getHead(func);
+    function * func = parseFunction(functionStr, root_func);
+    funcPart = func->head;
     
     free(func);
     return funcPart;

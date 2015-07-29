@@ -42,6 +42,7 @@ typedef struct numeric
 
 typedef struct other_function 
         fun;
+
 /* 
  =======================================================================
 
@@ -87,6 +88,54 @@ enum part_type_
         SQRT // Square Root
 };
 
+/*
+ ======================================================================
+
+        Structures
+
+ ======================================================================
+*/
+
+struct function 
+{
+    char         * str;
+    function     * root_func;
+    var          * var_list;
+    functionPart * head;
+};
+
+struct variable
+{
+    char variable;
+    double * num;
+    function * func;    
+};
+
+struct other_function 
+{
+    part_type type;
+    functionPart * contents;
+};
+
+union base_union 
+{
+    functionPart * par;
+    var var;
+    double num;
+    fun fun;
+};
+
+struct function_part 
+{
+    function * func;
+    char * str;
+    base base;
+    base exponent;
+    op_type operation;
+    functionPart * prev;
+    functionPart * next;
+};
+
 /* 
  =======================================================================
 
@@ -113,27 +162,27 @@ var * get_var_list(
 
 void set_var_list(
          function * func,
-         var * var_list
+         var      * var_list
 );
 
 void printInfo(
         function * theFunction
 );
 
-part_type isTrigFunction(
+part_type is_func_type(
         const char * firstLetter
 );
 
 void addToFunctionList(
-        function * func, 
-        char * functionBuilder,
-        const part_type type,
-        const op_type operation
+        function        * func, 
+        char            * functionBuilder,
+        const part_type   type,
+        const op_type     operation
 );
 
 void addToVariableList(
         function * theFunction,
-        char variable
+        char       variable
 );
 
 #endif

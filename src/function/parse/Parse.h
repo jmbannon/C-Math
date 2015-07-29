@@ -10,16 +10,16 @@
 
 #ifndef PARSE_H_
 #define PARSE_H_
-#include "Function.h"
+#include "../Function.h"
 
 function * parseFunction(
-        const char * theFunction,
-        var * root_var_list
+        const char * func_str,
+        function   * root_func
 );
 
 functionPart * parseFunctionPart(
         const char * functionStr,
-        var * root_var_list
+        function   * root_func
 );
 
 #endif
