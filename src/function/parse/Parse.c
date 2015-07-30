@@ -28,26 +28,14 @@
 #include <string.h>
 #include <ctype.h>
 #include "Parse.h"
+#include "ParseUtilities.h"
 #include "../Function.h"
 #include "../../utilities/ErrorMessage.h"
 #include "../../utilities/StringExtensions.h"
 #include "../../utilities/Boolean.h"
 
-#define HAS_OP  (0)
-#define HAS_NEG (1)
-#define HAS_NUM (2)
-#define HAS_DEC (3)
-#define HAS_EXP (4)
-#define HAS_VAR (5)
-#define IS_PAR  (6)
-#define IS_FUN  (7)
-
-#define SET_TRUE(BOOL, value)  (BOOL |= 1 << value)
-#define SET_FALSE(BOOL, value) (BOOL &= ~(1 << value))
-#define CHECK(BOOL, value)     (BOOL & 1 << value)
-
 static char * file_name = "Parse.c";
-static char error_loc_buffer[1024];
+static char   error_loc_buffer[1024];
 
 /* Function prototypes */
 bool parse_digit(
@@ -112,25 +100,6 @@ bool parse_operator(
         part_type    * temp_part
 );
 
-void print_parse_error(
-        const char * description,
-        const char * function,
-        int index
-);
-
-char * err_loc_msg(
-        const char * function,
-        int index
-);
-
-part_type get_part(
-        unsigned int B_BOOLS,
-        part_type temp_part
-);
-
-op_type get_op(
-        char c
-);
 
 /** Parses the given function from a string into a sequential linked list of
   * FunctionParts with operators inbetween.  
@@ -188,14 +157,14 @@ function * parseFunction(
         {       
             print_parse_error(
                 "Does not have an opening parenthesis.",
-                func_str, i);
+                file_name, func_str, error_loc_buffer, i);
             return NULL;
         } 
         else
         {
             print_parse_error(
                 "Unknown character to parse.",
-                func_str, i);
+                file_name, func_str, error_loc_buffer, i);
             pc = false;
         }
 
@@ -216,7 +185,7 @@ function * parseFunction(
     {
         print_parse_error(
             "Last operator does not operate on anything.\n",
-            func_str, -1);
+            file_name, func_str, error_loc_buffer, -1);
         return NULL;
     }
     return func;
@@ -233,7 +202,7 @@ bool parse_digit(
     {
        print_parse_error(
            "Cannot have digit immediately after variable without operation",
-           func_str, *i); 
+           file_name, func_str, error_loc_buffer, *i); 
        return false;
     }
     appendChar(func_builder, func_str[*i]);     
@@ -253,9 +222,9 @@ bool parse_factorial(
        (!isdigit(func_str[*i-1]) &&
         !isalpha(func_str[*i-1])))
     {
-        print_parse_error(
+        print_parse_error( 
             "Factorial must follow a value",
-            func_str, *i);
+            file_name, func_str, error_loc_buffer, *i);
         return false;
     }
     else
@@ -275,7 +244,7 @@ bool parse_alpha(
     {
         print_parse_error(
             "Invalid variable. Cannot proceed non-numeric symbol '.'",
-            func_str, *i); 
+            file_name, func_str, error_loc_buffer, *i); 
         return false;
     }
     // If letters proceed are a trig function, add preceding
@@ -440,7 +409,7 @@ bool parse_exponent(
         {
             print_parse_error(
                 "Exponent must proceed a number, variable, or parenthesis.",
-                func_str, *i);
+                file_name, func_str, error_loc_buffer, *i);
             return false;
         }
         // Append to function and set exponent to true, negative 
@@ -470,7 +439,7 @@ bool parse_exponent(
             {
                 print_parse_error(
                     "Exponent must preceed a number, variable, or parenthesis.",
-                    func_str, *i+1);
+                    file_name, func_str, error_loc_buffer, *i+1);
                 return false;
             }
         }
@@ -481,7 +450,7 @@ bool parse_exponent(
     {
         print_parse_error(
             "Function already contains an exponent.",
-            func_str, *i);
+            file_name, func_str, error_loc_buffer, *i);
         return false;
     }
     return true;
@@ -502,7 +471,7 @@ bool parse_decimal(
          {
              print_parse_error(
                 "A decimal point cannot proceed a variable.",
-                func_str, *i); 
+                file_name, func_str, error_loc_buffer, *i); 
              return false;
          }
 
@@ -520,7 +489,7 @@ bool parse_decimal(
     {
         print_parse_error(
             "Numeric already contains a decimal.",
-            func_str, *i); 
+            file_name, func_str, error_loc_buffer, *i); 
         return false;
     }
     return true;
@@ -557,7 +526,7 @@ bool parse_dash(
             {
                 print_parse_error(
                     "Cannot subtract a decimal.",
-                    func_str, *i); 
+                    file_name, func_str, error_loc_buffer, *i); 
                 return false;
             }
             appendStr(func_builder, &func_str[*i], 1);
@@ -572,14 +541,14 @@ bool parse_dash(
         {
             print_parse_error(
                 "A subtraction operation already exists.",
-                func_str, *i); 
+                file_name, func_str, error_loc_buffer, *i); 
             return false;
         }
         else if (CHECK(*B_BOOLS, HAS_OP)) 
         {
             print_parse_error(
                 "An operator already exists",
-                func_str, *i);
+                file_name, func_str, error_loc_buffer, *i);
             return false;
         }
         addToFunctionList(func,
@@ -606,7 +575,7 @@ bool parse_operator(
     {
         print_parse_error(
             "Operation must proceed a number, variable, or parenthesis.",
-            func_str, *i);
+            file_name, func_str, error_loc_buffer, *i);
         return false;
     }
 
@@ -639,59 +608,3 @@ functionPart * parseFunctionPart(
     return funcPart;
 }
 
-void print_parse_error(
-        const char * description,
-        const char * function,
-        int index
-) {
-    parse_error(
-        file_name,
-        "parse_function",
-        description,
-        err_loc_msg(function, index)); 
-}
-
-part_type get_part(
-        unsigned int B_BOOLS,
-        const part_type temp_part
-) {
-    if (CHECK(B_BOOLS, HAS_VAR))
-        return VAR;
-    else if (CHECK(B_BOOLS, HAS_NUM))
-        return NUM;
-    else if (CHECK(B_BOOLS, IS_FUN))
-        return temp_part;
-    else if (CHECK(B_BOOLS, IS_PAR))
-        return PAR;
-    else
-        return NOPART;
-}
-
-op_type get_op(
-        char c
-) {
-    switch(c)
-    {
-        case '+': return  ADD;
-        case '-': return  SUB;
-        case '/': return  DIV;
-        case '\0': return NOOP;
-        default: return MUL;
-    }
-}
-
-/* Returns the string of the current function and the index the error
- * was thrown.
- */ 
-char * err_loc_msg(
-        const char * function,
-        int index
-) {
-    if (index >= 0)
-        sprintf(error_loc_buffer, 
-            "Function: %s : Index: %d", function, index);
-    else
-        sprintf(error_loc_buffer, 
-            "  Function: %s : Index: end of function", function);
-    return error_loc_buffer;
-}
