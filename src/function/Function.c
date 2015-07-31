@@ -14,8 +14,8 @@
 #include <ctype.h>
 #include <assert.h>
 #include "Function.h"
-#include "../utilities/Boolean.h"
 #include "parse/Parse.h"
+#include "../utilities/Boolean.h"
 #include "../utilities/StringExtensions.h"
 
 static int VAR_LIST_SIZE = 64;
@@ -28,9 +28,48 @@ static int VAR_LIST_SIZE = 64;
  =======================================================================
 */
 
+/*
+ *  Converts a string into a double
+ */
+double initialize_num(
+        char * number
+);
+
+/*
+ *  Converts a string into a var struct with the variable initialized.
+ */
+var initialize_var(
+        char         * variable,
+        function     * root_func
+);
+
+/*
+ *  Converts a string into a fun struct with
+ *  the type and contents initialized.
+ */
+fun initialize_fun(
+        char      * part_str,
+        function  * root_func,
+  const part_type   type
+);
+
+/*
+ *  Converts a string into a functionPart struct containing
+ *  the parenthesis contents.
+ */
 functionPart * parse_parenthesis_part(
         char     * par_str,
         function * root_func
+);
+
+/*
+ *  Assigns the base struct some type.
+ */
+void initialize_base(
+        function * root_func,
+        char     * str,
+  const part_type  type,
+        base       base
 );
 
 /* 
@@ -41,95 +80,100 @@ functionPart * parse_parenthesis_part(
  =======================================================================
 */
 
-void initialize_par(
-        functionPart * part,
+var initialize_var(
+        char         * variable,
         function     * root_func
 ) {
-    part->base.par = parse_parenthesis_part(part->str,
-                                            root_func);
+    assert(isalpha(variable[0]));
+    var var;
+    var.variable = variable[0];
+    addToVariableList(root_func, variable[0]);
+    return var;
 }
 
-void initialize_var(
-        functionPart * part,
-        function     * root_func
-) {
-    assert(isalpha(part->str[0]));
-    part->base.var.variable = part->str[0];
-    addToVariableList(part->func, part->str[0]);
-}
-
-void initialize_num(
-        functionPart * part,
-        function     * root_func
+double initialize_num(
+        char * number
 ) {
     int i = 0;
-    char * temp = malloc(sizeof(part->str));
-    while (isdigit(part->str[i]) || part->str[i] == '.'
-                                 || part->str[i] == '-')
+    double num;
+    char * number_str = calloc(sizeof(number), sizeof(char));
+
+    while (isdigit(number[i])
+               || number[i] == '.'
+               || number[i] == '-')
     {
-        temp[i] = part->str[i];
+        number_str[i] = number[i];
         ++i;
     }
-    part->base.num = atof(temp);
-    free(temp);
+    num = atof(number_str);
+    free(number_str);
+    return num;
 }
 
-void initialize_fun(
-        functionPart * part,
-        function     * root_func,
-  const part_type      type
+fun initialize_fun(
+        char      * part_str,
+        function  * root_func,
+  const part_type   type
 ) {
-    assert(type != NOPART);
-
     int i = 0;
-    part->base.fun.type = type;
+    fun fun;
+
+    fun.type = type;
     switch(type)
     {
         case LN:   i += 2; break;
         case SQRT: i += 4; break;
         default:   i += 3; break;
     }
-    part->base.fun.contents = parse_parenthesis_part(&part->str[i],
-                                                     root_func);
+    fun.contents = parse_parenthesis_part(&part_str[i],
+                                           root_func);
+    return fun;
 }
 
+void initialize_base(
+        function * root_func,
+        char     * str,
+  const part_type  type,
+        base       base)
+{
+    assert(type != NOPART);
+    switch(type)
+    {
+    case PAR: base.par = parse_parenthesis_part(str, root_func); break;
+    case VAR: base.var = initialize_var(str, root_func); break;
+    case NUM: base.num = initialize_num(str); break;
+     default: base.fun = initialize_fun(str, root_func, type);
+    }
+}
 
 /* Determines the part_union for the given functionPart.
  * Creates the part based on parsing the first char within its string
  */
 void initializePart(
+        function     * root_func,
         functionPart * thePart,
-  const part_type      type,
-        function     * root_func
+  const part_type      base_type,
+  const part_type      exp_type
 ) {
+    assert(base_type != NOPART);
     int i = 0, len = strlen(thePart->str);
-    switch(type)
-    {
-        case PAR: initialize_par(thePart, root_func); break;
-        case VAR: initialize_var(thePart, root_func); break;
-        case NUM: initialize_num(thePart, root_func); break;
-        default:  initialize_fun(thePart, root_func, type); break;
-    }
-    while (i < len && thePart->str[i] != '^') ++i;
-    if (thePart->str[i] == '^')
-    {
-        if (thePart->str[i+1] == '(')
-            thePart->exponent.par = parse_parenthesis_part(&thePart->str[i+1],
-                                                           root_func);
-    }
-    else if (isalpha(thePart->str[i]))
-    {
-        thePart->exponent.var.variable = thePart->str[i];
-        addToVariableList(thePart->func, thePart->str[i]);
-    }
-    else if (isdigit(thePart->str[i]) || thePart->str[i] == '-')
-    {
 
-    }
+    initialize_base(root_func,
+                    thePart->str,
+                    base_type,
+                    thePart->base);
+
+    while (i < len && thePart->str[i] != '^') ++i;
+    if (thePart->str[i++] == '^')
+        initialize_base(root_func,
+                        &thePart->str[i],
+                        exp_type,
+                        thePart->exponent);
 }
 
 /* Parses the given parenthesis string and returns its functionPart.
- * par_str is expected to be passed in at the index of the opening parenthesis.
+ * par_str is expected to be passed in at the index 
+ * of the opening parenthesis.
  */
 functionPart * parse_parenthesis_part(
         char     * par_str,
@@ -151,7 +195,7 @@ functionPart * parse_parenthesis_part(
 /* Initializes a function type with the given function string.
  */
 function * initializeFunction(
-        const char * theFunction
+  const char * theFunction
 ) {
     function * func = malloc(sizeof(function));
     func->str = malloc(strlen(theFunction)+1);
@@ -191,22 +235,23 @@ void printInfo(
  */
 void addToFunctionList(
         function * func,
-        char * functionBuilder,
-        const part_type type, 
-        const op_type operation
+        char     * functionBuilder,
+  const part_type  base_type, 
+  const part_type  exp_type,
+  const op_type    operation
 ) {
     functionPart * thePart = malloc(sizeof(functionPart));
     functionPart * currTemp = func->head;
 
-    printf("type = %d op = %d, thePart = %s\n", type, operation, functionBuilder);
+    printf("base = %d exp = %d op = %d, thePart = %s\n", base_type,
+                                                exp_type,
+                                                operation,
+                                                functionBuilder);
 
     thePart->func = func;
     thePart->str = malloc(strlen(functionBuilder) + 1);
     strcpy(thePart->str, functionBuilder);
-    initializePart(thePart, type, func->root_func);
-
-    functionBuilder[0] = '\0';
-
+    initializePart(func->root_func, thePart, base_type, exp_type);
     thePart->operation = operation;
     
     if (currTemp == NULL)
@@ -230,7 +275,7 @@ void addToFunctionList(
  * string.
  */
 part_type is_func_type(
-        const char * firstLetter
+  const char * firstLetter
 ) {
     if (strncmp(firstLetter, "sin(", 4) == 0)
         return SIN;
@@ -281,7 +326,7 @@ part_type is_func_type(
  */
 int needs_var_insert(
         function * theFunction,
-        const char variable
+  const char       variable
 ) {
     int i;
     for (i = 0; i < VAR_LIST_SIZE; i++)
@@ -300,8 +345,8 @@ int needs_var_insert(
  */
 void insertVariableToList(
         var * var_list,
-        char variable,
-        int idx
+        char  variable,
+        int   idx
 ) {
     if (idx == VAR_LIST_SIZE)
         var_list = realloc(var_list, VAR_LIST_SIZE*=2);
@@ -319,7 +364,7 @@ void insertVariableToList(
  */
 void addToVariableList(
         function * theFunction,
-        char variable
+        char       variable
 ) {
     int insertIdx = needs_var_insert(theFunction, variable);
     if (insertIdx >= 0)

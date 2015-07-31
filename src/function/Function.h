@@ -148,23 +148,6 @@ function * initializeFunction(
         const char * theFunction
 );
 
-functionPart * getHead(
-        function * theFunction
-);
-
-char * get_func_str(
-        function * func
-);
-
-var * get_var_list(
-        function * func
-);
-
-void set_var_list(
-         function * func,
-         var      * var_list
-);
-
 void printInfo(
         function * theFunction
 );
@@ -174,10 +157,11 @@ part_type is_func_type(
 );
 
 void addToFunctionList(
-        function        * func, 
-        char            * functionBuilder,
-        const part_type   type,
-        const op_type     operation
+        function  * func, 
+        char      * functionBuilder,
+  const part_type   base_type,
+  const part_type   exp_type,
+  const op_type     operation
 );
 
 void addToVariableList(

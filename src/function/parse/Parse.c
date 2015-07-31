@@ -38,6 +38,11 @@ static char * file_name = "Parse.c";
 static char   error_loc_buffer[1024];
 
 /* Function prototypes */
+function * parseFunction(
+  const char     * func_str,
+        function * root_func
+);
+
 bool parse_digit(
         function     * func,
         unsigned int * i,
@@ -57,7 +62,8 @@ bool parse_alpha(
         unsigned int * i,
         char         * func_builder,
         unsigned int * B_BOOLS,
-        part_type    * temp_part
+        part_type    * temp_part,
+        part_type    * exp_part
 );
 
 bool parse_parenthesis(
@@ -65,7 +71,8 @@ bool parse_parenthesis(
         unsigned int * i,
         char         * func_builder,
         unsigned int * B_BOOLS,
-        part_type    * temp_part
+        part_type    * temp_part,
+        part_type    * exp_part
 );
 
 bool parse_exponent(
@@ -73,7 +80,8 @@ bool parse_exponent(
         unsigned int * i,
         char         * func_builder,
         unsigned int * B_BOOLS,
-        part_type    * temp_part
+        part_type    * temp_part,
+        part_type    * exp_part
 );
 
 bool parse_decimal(
@@ -81,7 +89,8 @@ bool parse_decimal(
         unsigned int * i,
         char         * func_builder,
         unsigned int * B_BOOLS,
-        part_type    * temp_part
+        part_type    * temp_part,
+        part_type    * exp_part
 );
 
 bool parse_dash(
@@ -89,7 +98,8 @@ bool parse_dash(
         unsigned int * i,
         char         * func_builder,
         unsigned int * B_BOOLS,
-        part_type    * temp_part
+        part_type    * temp_part,
+        part_type    * exp_part
 );
 
 bool parse_operator(
@@ -97,17 +107,30 @@ bool parse_operator(
         unsigned int * i,
         char         * func_builder,
         unsigned int * B_BOOLS,
-        part_type    * temp_part
+        part_type    * temp_part,
+        part_type    * exp_part
 );
 
+void clear_buffers(
+        char         * func_builder,
+        unsigned int * B_BOOLS,
+        part_type    * base_part,
+        part_type    * exp_part
+);
+
+function * parse(
+  const char * func_str
+) {
+    return parseFunction(func_str, NULL);
+}
 
 /** Parses the given function from a string into a sequential linked list of
   * FunctionParts with operators inbetween.  
   * WIP
   */
 function * parseFunction(
-        const char * func_str,
-        function   * root_func
+  const char     * func_str,
+        function * root_func
 ) {
     unsigned int i;
     unsigned int par_bal = 0;
@@ -115,9 +138,9 @@ function * parseFunction(
     char func_builder[1024] = {0};
     char c;
     bool pc = true;
-    op_type   temp_op;
-    part_type temp_part; 
-    part_type exp_part;
+    op_type   temp_op   = NOOP;
+    part_type temp_part = NOPART; 
+    part_type exp_part  = NOPART;
     function * func = initializeFunction(func_str);
 
     if (root_func == NULL)
@@ -136,22 +159,22 @@ function * parseFunction(
             pc = parse_factorial(func, &i, func_builder, &B_BOOLS);
  
         else if (isalpha(c)) //should recognize log(, ln(, pi, e, L(), and !
-            pc = parse_alpha(func, &i, func_builder, &B_BOOLS, &temp_part);
+            pc = parse_alpha(func, &i, func_builder, &B_BOOLS, &temp_part, &exp_part);
         
         else if (c == '.') 
-            pc = parse_decimal(func, &i, func_builder, &B_BOOLS, &temp_part);
+            pc = parse_decimal(func, &i, func_builder, &B_BOOLS, &temp_part, &exp_part);
 
         else if (c == '-')        
-            pc = parse_dash(func, &i, func_builder, &B_BOOLS, &temp_part);
+            pc = parse_dash(func, &i, func_builder, &B_BOOLS, &temp_part, &exp_part);
 
         else if (c == '^')
-            pc = parse_exponent(func, &i, func_builder, &B_BOOLS, &temp_part);
+            pc = parse_exponent(func, &i, func_builder, &B_BOOLS, &temp_part, &exp_part);
 
         else if (c == '+' || c == '*' || c == '/') 
-            pc = parse_operator(func, &i, func_builder, &B_BOOLS, &temp_part);
+            pc = parse_operator(func, &i, func_builder, &B_BOOLS, &temp_part, &exp_part);
 
         else if (c == '(')                                               
-            pc = parse_parenthesis(func, &i, func_builder, &B_BOOLS, &temp_part);
+            pc = parse_parenthesis(func, &i, func_builder, &B_BOOLS, &temp_part, &exp_part);
 
         else if (c == ')')                                                 
         {       
@@ -177,8 +200,9 @@ function * parseFunction(
         addToFunctionList(func, 
                           func_builder,
                           get_part(B_BOOLS, temp_part),
+                          exp_part,
                           NOOP);
-        B_BOOLS = 0;
+        clear_buffers(func_builder, &B_BOOLS, &temp_part, &exp_part);
     }
 
     if (CHECK(B_BOOLS, HAS_OP))
@@ -237,8 +261,10 @@ bool parse_alpha(
         unsigned int * i,
         char         * func_builder,
         unsigned int * B_BOOLS,
-        part_type    * temp_part
+        part_type    * temp_part,
+        part_type    * exp_part
 ) {
+    part_type fun_part;
     char * func_str = func->str;
     if (*i > 0 && func_str[*i-1] == '.') 
     {
@@ -249,7 +275,7 @@ bool parse_alpha(
     }
     // If letters proceed are a trig function, add preceding
     // function to equationList and create new function 
-    else if ((*temp_part = is_func_type(&func_str[*i]))) 
+    else if ((fun_part = is_func_type(&func_str[*i]))) 
     {
         if (*i != 0 && 
             !CHECK(*B_BOOLS, HAS_OP) &&
@@ -258,13 +284,15 @@ bool parse_alpha(
              addToFunctionList(func,
                                func_builder,
                                get_part(*B_BOOLS, *temp_part),
+                               *exp_part,
                                MUL);
-             *B_BOOLS = 0;
+             clear_buffers(func_builder, B_BOOLS, temp_part, exp_part);
         }
+        *temp_part = fun_part;
         SET_TRUE(*B_BOOLS, IS_FUN);
         appendStr(func_builder, &func_str[*i], 3);
         *i += 3;
-        return parse_parenthesis(func, i, func_builder, B_BOOLS, temp_part);
+        return parse_parenthesis(func, i, func_builder, B_BOOLS, temp_part, exp_part);
     }
     // Exponent contains a variable -> assume that's all in exponent
     else if (*i > 0 && CHECK(*B_BOOLS, HAS_EXP) && func_str[*i-1] == '^')
@@ -276,8 +304,9 @@ bool parse_alpha(
         addToFunctionList(func,
                           func_builder,
                           get_part(*B_BOOLS, *temp_part),
+                          *exp_part,
                           get_op(func_str[*i+1]));
-        *B_BOOLS = 0;
+        clear_buffers(func_builder, B_BOOLS, temp_part, exp_part);
     }
     // Assume it's a variable
     else
@@ -287,8 +316,9 @@ bool parse_alpha(
              addToFunctionList(func,
                                func_builder,
                                get_part(*B_BOOLS, *temp_part),
+                               *exp_part,
                                MUL);
-             *B_BOOLS = 0;
+             clear_buffers(func_builder, B_BOOLS, temp_part, exp_part);
          }
          appendStr(func_builder, &func_str[*i], 1);
          SET_TRUE(*B_BOOLS, HAS_VAR);
@@ -301,7 +331,8 @@ bool parse_parenthesis(
         unsigned int * i,
         char         * func_builder,
         unsigned int * B_BOOLS,
-        part_type    * temp_part
+        part_type    * temp_part,
+        part_type    * exp_part
 ) {
     char * func_str = func->str;
     int par_bal = 1;
@@ -309,7 +340,6 @@ bool parse_parenthesis(
     {
         // (Function handles operations) 
         // Assume it's implicit multiplication
-        SET_TRUE(*B_BOOLS, IS_PAR);
         if (!CHECK(*B_BOOLS, HAS_OP)  &&
             !CHECK(*B_BOOLS, IS_FUN)  &&
             !CHECK(*B_BOOLS, HAS_EXP) &&
@@ -318,11 +348,13 @@ bool parse_parenthesis(
             addToFunctionList(func,
                               func_builder,
                               get_part(*B_BOOLS, *temp_part),
+                              *exp_part,
                               MUL);
         }
 
         // Always appends opening parenthesis to 
         // appear in functionPart string
+        SET_TRUE(*B_BOOLS, IS_PAR);
         appendStr(func_builder, &func_str[*i], 1);
 
         while (*i < strlen(func_str)-1)
@@ -367,8 +399,12 @@ bool parse_parenthesis(
                     case '^':  SET_FALSE(*B_BOOLS, IS_PAR);
                                SET_FALSE(*B_BOOLS, IS_FUN);
                                ++(*i);
-                               return parse_exponent(func, i, func_builder, B_BOOLS, temp_part);
-
+                               return parse_exponent(func,
+                                                     i,
+                                                     func_builder,
+                                                     B_BOOLS,
+                                                     temp_part,
+                                                     exp_part);
                     default: temp_op = MUL;
                              SET_TRUE(*B_BOOLS, HAS_OP);
                              break; 
@@ -376,8 +412,9 @@ bool parse_parenthesis(
                     addToFunctionList(func, 
                                       func_builder,
                                       get_part(*B_BOOLS, *temp_part),
+                                      *exp_part,
                                       temp_op);
-                    *B_BOOLS = 0;
+                    clear_buffers(func_builder, B_BOOLS, temp_part, exp_part);
                     break;
                 }  
             }    
@@ -395,7 +432,8 @@ bool parse_exponent(
         unsigned int * i,
         char         * func_builder,
         unsigned int * B_BOOLS,
-        part_type    * temp_part
+        part_type    * temp_part,
+        part_type    * exp_part
 ) {
     char * func_str = func->str;
     if (!CHECK(*B_BOOLS, HAS_EXP)) 
@@ -416,25 +454,24 @@ bool parse_exponent(
         // and decimal to false for exponent number                 
         else 
         {
-            part_type exp_part;
             appendStr(func_builder, &func_str[*i], 1);
             SET_TRUE (*B_BOOLS, HAS_EXP);
             SET_FALSE(*B_BOOLS, HAS_NEG);
             SET_FALSE(*B_BOOLS, HAS_DEC);
 
-            if (isdigit(func_str[*i+1]) ||
-                    func_str[*i+1] == '.' ||
-                    func_str[*i+1] == '-')
-                exp_part = NUM;
+            if (isdigit(func_str[*i+1])
+                    || func_str[*i+1] == '.'
+                    || func_str[*i+1] == '-')
+                *exp_part = NUM;
             else if (isalpha(func_str[*i+1]))
             {
-                if (is_func_type(&func_str[*i+1]))
-                    exp_part = is_func_type(&func_str[*i+1]);
+                if ((*exp_part = is_func_type(&func_str[*i+1])))
+                    { /* Is assigned */ }
                 else
-                    exp_part = VAR;
+                    *exp_part = VAR;
             }
             else if (func_str[*i+1] == '(')
-                exp_part = PAR;
+                *exp_part = PAR;
             else
             {
                 print_parse_error(
@@ -461,7 +498,8 @@ bool parse_decimal(
         unsigned int * i,
         char         * func_builder,
         unsigned int * B_BOOLS,
-        part_type    * temp_part
+        part_type    * temp_part,
+        part_type    * exp_part
 ) {
     char * func_str = func->str;
     if (!CHECK(*B_BOOLS, HAS_DEC)) 
@@ -500,7 +538,8 @@ bool parse_dash(
         unsigned int * i,
         char         * func_builder,
         unsigned int * B_BOOLS,
-        part_type    * temp_part
+        part_type    * temp_part,
+        part_type    * exp_part
 ) {
     char * func_str = func->str;
 
@@ -514,8 +553,9 @@ bool parse_dash(
             addToFunctionList(func,
                               func_builder,
                               get_part(*B_BOOLS, *temp_part),
+                              *exp_part,
                               SUB);
-            *B_BOOLS = 0;
+            clear_buffers(func_builder, B_BOOLS, temp_part, exp_part);
             SET_TRUE(*B_BOOLS, HAS_OP);
 
         // Otherwise act as negative symbol and append to buffer
@@ -554,8 +594,10 @@ bool parse_dash(
         addToFunctionList(func,
                           func_builder,
                           get_part(*B_BOOLS, *temp_part),
-                          SUB); 
-        *B_BOOLS = 0;    
+                          *exp_part,
+                          SUB);
+ 
+        clear_buffers(func_builder, B_BOOLS, temp_part, exp_part);    
         SET_TRUE(*B_BOOLS, HAS_OP);
     }
     return true;
@@ -566,7 +608,8 @@ bool parse_operator(
         unsigned int * i,
         char         * func_builder,
         unsigned int * B_BOOLS,
-        part_type    * temp_part
+        part_type    * temp_part,
+        part_type    * exp_part
 ) {
     char * func_str = func->str;
     op_type temp_op;
@@ -589,15 +632,17 @@ bool parse_operator(
     addToFunctionList(func,
                       func_builder,
                       get_part(*B_BOOLS, *temp_part),
+                      *exp_part,
                       temp_op);
-    *B_BOOLS = 0;
+
+    clear_buffers(func_builder, B_BOOLS, temp_part, exp_part);
     SET_TRUE(*B_BOOLS, HAS_OP);
     return true;
 }
 
 functionPart * parseFunctionPart(
-        const char * functionStr,
-        function   * root_func
+  const char     * functionStr,
+        function * root_func
 ) {
     functionPart * funcPart;
     
@@ -608,3 +653,14 @@ functionPart * parseFunctionPart(
     return funcPart;
 }
 
+void clear_buffers(
+        char         * func_builder,
+        unsigned int * B_BOOLS,
+        part_type    * base_part,
+        part_type    * exp_part
+) {
+    func_builder[0] = '\0';
+    *B_BOOLS = 0;
+    *base_part = NOPART;
+    *exp_part  = NOPART;    
+}

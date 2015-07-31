@@ -12,14 +12,14 @@
 #define PARSE_H_
 #include "../Function.h"
 
-function * parseFunction(
-        const char * func_str,
-        function   * root_func
+function * parse(
+  const char * func_str
 );
 
+
 functionPart * parseFunctionPart(
-        const char * functionStr,
-        function   * root_func
+  const char     * functionStr,
+        function * root_func
 );
 
 #endif
