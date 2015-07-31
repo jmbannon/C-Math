@@ -17,8 +17,8 @@ function * parse(
 );
 
 
-functionPart * parseFunctionPart(
-  const char     * functionStr,
+part * parse_part(
+  const char     * part_str,
         function * root_func
 );
 

@@ -31,7 +31,7 @@ char * substring(
     return substring;
 }
 
-char * removeEnds(
+char * remove_ends(
         char* functionPart_str,
         const size_t amount
 ) {
@@ -44,7 +44,7 @@ char * removeEnds(
     return endRemoved;
 } 
 
-void appendChar(
+void append_char(
         char* string, const char c
 ) {
 
@@ -58,7 +58,7 @@ void appendChar(
     sprintf(string, "%s%c", string, c);
 }
 
-void appendStr(
+void append_str(
         char* string, 
         const char* toCopy, 
         const int charAmount
@@ -83,7 +83,7 @@ void appendStr(
         sprintf(string, "%.*s", charAmount, toCopy);
 }
 
-void removeChar(
+void remove_char(
         char* string, 
         const int index
 ) {

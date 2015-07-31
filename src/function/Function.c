@@ -54,10 +54,10 @@ fun initialize_fun(
 );
 
 /*
- *  Converts a string into a functionPart struct containing
+ *  Converts a string into a part struct containing
  *  the parenthesis contents.
  */
-functionPart * parse_parenthesis_part(
+part * parse_parenthesis_part(
         char     * par_str,
         function * root_func
 );
@@ -146,12 +146,12 @@ void initialize_base(
     }
 }
 
-/* Determines the part_union for the given functionPart.
+/* Determines the part_union for the given part.
  * Creates the part based on parsing the first char within its string
  */
 void initializePart(
         function     * root_func,
-        functionPart * thePart,
+        part * thePart,
   const part_type      base_type,
   const part_type      exp_type
 ) {
@@ -171,11 +171,11 @@ void initializePart(
                         thePart->exponent);
 }
 
-/* Parses the given parenthesis string and returns its functionPart.
+/* Parses the given parenthesis string and returns its part.
  * par_str is expected to be passed in at the index 
  * of the opening parenthesis.
  */
-functionPart * parse_parenthesis_part(
+part * parse_parenthesis_part(
         char     * par_str,
         function * root_func
 ) {
@@ -188,7 +188,7 @@ functionPart * parse_parenthesis_part(
         if (par_bal != 0) ++i;
     }
     assert(par_bal == 0);
-    return parseFunctionPart(substring(par_str, 1, i), root_func);
+    return parse_part(substring(par_str, 1, i), root_func);
 }
 
 
@@ -214,7 +214,7 @@ void printInfo(
         return;
 
     printf("Full function: %s\n", theFunction->str);
-    functionPart* curr = theFunction->head;
+    part* curr = theFunction->head;
 
     while (curr != NULL) 
     {
@@ -230,18 +230,18 @@ void printInfo(
 }
 
 /* Adds a valid piece of a function string to the function type's linked
- * list of functionParts with the given operation.  Then clears the function
- * builder for input of another functionPart if it exists.
+ * list of parts with the given operation.  Then clears the function
+ * builder for input of another part if it exists.
  */
 void addToFunctionList(
         function * func,
         char     * functionBuilder,
   const part_type  base_type, 
   const part_type  exp_type,
-  const op_type    operation
+  const op    operation
 ) {
-    functionPart * thePart = malloc(sizeof(functionPart));
-    functionPart * currTemp = func->head;
+    part * thePart = malloc(sizeof(part));
+    part * currTemp = func->head;
 
     printf("base = %d exp = %d op = %d, thePart = %s\n", base_type,
                                                 exp_type,

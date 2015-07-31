@@ -36,7 +36,7 @@ part_type get_part(
         part_type    temp_part
 );
 
-op_type get_op(
+op get_op(
         char c
 );
 

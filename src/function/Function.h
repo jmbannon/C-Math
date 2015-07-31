@@ -23,7 +23,7 @@ typedef enum part_type_
         part_type;
 
 typedef enum operations_
-        op_type;
+        op;
 
 typedef struct function 
         function;
@@ -32,7 +32,7 @@ typedef union base_union
         base;
 
 typedef struct function_part 
-        functionPart;
+        part;
 
 typedef struct variable 
         var;
@@ -101,7 +101,7 @@ struct function
     char         * str;
     function     * root_func;
     var          * var_list;
-    functionPart * head;
+    part * head;
 };
 
 struct variable
@@ -114,12 +114,12 @@ struct variable
 struct other_function 
 {
     part_type type;
-    functionPart * contents;
+    part * contents;
 };
 
 union base_union 
 {
-    functionPart * par;
+    part * par;
     var var;
     double num;
     fun fun;
@@ -131,9 +131,9 @@ struct function_part
     char * str;
     base base;
     base exponent;
-    op_type operation;
-    functionPart * prev;
-    functionPart * next;
+    op operation;
+    part * prev;
+    part * next;
 };
 
 /* 
@@ -161,7 +161,7 @@ void addToFunctionList(
         char      * functionBuilder,
   const part_type   base_type,
   const part_type   exp_type,
-  const op_type     operation
+  const op     operation
 );
 
 void addToVariableList(

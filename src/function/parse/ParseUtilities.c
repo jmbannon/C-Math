@@ -35,7 +35,7 @@ part_type get_part(
         return NOPART;
 }
 
-op_type get_op(
+op get_op(
         char c
 ) {
     switch(c)
