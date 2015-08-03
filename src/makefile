@@ -12,8 +12,8 @@ I=
 
 all: parser
 
-parser: test.o Function.o StringExtensions.o ErrorMessage.o ParseUtils.o Parse.o
-	$(CC) -o parser test.o StringExtensions.o ErrorMessage.o Function.o ParseUtils.o Parse.o #-$(I)
+parser: test.o Function.o FunctionSolve.o StringExtensions.o ErrorMessage.o ParseUtils.o Parse.o
+	$(CC) -o parser test.o StringExtensions.o ErrorMessage.o Function.o FunctionSolve.o ParseUtils.o Parse.o #-$(I)
 	rm -f *.o
 
 test.o: test.c
@@ -21,6 +21,9 @@ test.o: test.c
 
 Function.o: function/Function.c function/Function.h
 	$(CC) -c function/Function.c -o Function.o
+
+FunctionSolve.o: function/solve/FunctionSolve.c function/solve/FunctionSolve.h
+	$(CC) -c function/solve/FunctionSolve.c -o FunctionSolve.o
 
 StringExtensions.o: utilities/StringExtensions.c utilities/StringExtensions.h
 	$(CC) -c utilities/StringExtensions.c -o StringExtensions.o

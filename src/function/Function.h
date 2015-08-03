@@ -98,16 +98,16 @@ enum part_type_
 
 struct function 
 {
-    char         * str;
-    function     * root_func;
-    var          * var_list;
-    part * head;
+    char     * str;
+    function * root_func;
+    var      * var_list;
+    part     * head;
 };
 
 struct variable
 {
-    char variable;
-    double * num;
+    char       variable;
+    double   * num;
     function * func;    
 };
 
@@ -127,13 +127,15 @@ union base_union
 
 struct function_part 
 {
-    function * func;
-    char * str;
-    base base;
-    base exponent;
-    op operation;
-    part * prev;
-    part * next;
+    function  * func;
+    char      * str;
+    part_type   base_type;
+    part_type   exp_type;
+    base        base;
+    base        exponent;
+    op          operation;
+    part      * prev;
+    part      * next;
 };
 
 /* 
@@ -143,6 +145,9 @@ struct function_part
 
  =======================================================================
 */
+
+
+static int VAR_LIST_SIZE = 64;
 
 function * initializeFunction(
         const char * theFunction

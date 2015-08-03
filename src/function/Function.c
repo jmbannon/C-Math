@@ -18,8 +18,6 @@
 #include "../utilities/Boolean.h"
 #include "../utilities/StringExtensions.h"
 
-static int VAR_LIST_SIZE = 64;
-
 /* 
  =======================================================================
 
@@ -150,13 +148,15 @@ void initialize_base(
  * Creates the part based on parsing the first char within its string
  */
 void initializePart(
-        function     * root_func,
-        part * thePart,
-  const part_type      base_type,
-  const part_type      exp_type
+        function  * root_func,
+        part      * thePart,
+  const part_type   base_type,
+  const part_type   exp_type
 ) {
-    assert(base_type != NOPART);
-    int i = 0, len = strlen(thePart->str);
+    int i = 0;
+    int len = strlen(thePart->str);
+    thePart->base_type = base_type;
+    thePart->exp_type = exp_type;
 
     initialize_base(root_func,
                     thePart->str,

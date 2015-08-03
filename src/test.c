@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include "function/parse/Parse.h"
 #include "function/Function.h"
+#include "function/solve/FunctionSolve.h"
 
 int main(void) 
 {
@@ -24,5 +25,7 @@ int main(void)
      printInfo(theFunc2);
      function * theFunc3 = parse(test3);
      printInfo(theFunc3);
+
+     solve_function(theFunc3, 2, 45.4323, 234.234);
      return 0;
 }
