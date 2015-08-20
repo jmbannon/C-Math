@@ -27,12 +27,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdbool.h>
 #include "Parse.h"
 #include "ParseUtilities.h"
 #include "../Function.h"
 #include "../../utilities/ErrorMessage.h"
 #include "../../utilities/StringExtensions.h"
-#include "../../utilities/Boolean.h"
 
 static char * file_name = "Parse.c";
 static char   error_loc_buffer[1024];

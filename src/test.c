@@ -13,6 +13,7 @@
 #include "function/parse/Parse.h"
 #include "function/Function.h"
 #include "function/solve/FunctionSolve.h"
+#include "function/solve/Factorial.h"
 
 int main(void) 
 {
@@ -27,5 +28,6 @@ int main(void)
      printInfo(theFunc3);
 
      solve_function(theFunc3, 2, 45.4323, 234.234);
+     printf("%lf\n", integer_factorial(0.00000001));
      return 0;
 }

@@ -96,7 +96,7 @@ enum part_type_
  ======================================================================
 */
 
-struct function 
+struct function // function
 {
     char     * str;
     function * root_func;
@@ -104,20 +104,20 @@ struct function
     part     * head;
 };
 
-struct variable
+struct variable // var
 {
     char       variable;
-    double   * num;
+    double     num;
     function * func;    
 };
 
-struct other_function 
+struct other_function // fun
 {
     part_type type;
     part * contents;
 };
 
-union base_union 
+union base_union //base
 {
     part * par;
     var var;
@@ -125,7 +125,7 @@ union base_union
     fun fun;
 };
 
-struct function_part 
+struct function_part //part
 {
     function  * func;
     char      * str;
